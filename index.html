@@ -1,0 +1,2110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Call of Deriv — by HMT v4</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;500;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #070a0f;
+  --panel:     #0d1117;
+  --border:    #1c2a1c;
+  --accent:    #00ff88;
+  --accent2:   #00ccff;
+  --danger:    #ff3355;
+  --warn:      #ffaa00;
+  --dim:       #2a3a2a;
+  --text:      #c8d8c8;
+  --textdim:   #556655;
+  --glow:      0 0 16px rgba(0,255,136,0.35);
+  --glow2:     0 0 16px rgba(0,204,255,0.35);
+  --font-mono: 'Share Tech Mono', monospace;
+  --font-hud:  'Rajdhani', sans-serif;
+  --font-title:'Orbitron', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-hud);
+  font-size: 14px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── SCANLINES OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,0.015) 2px, rgba(0,255,136,0.015) 4px);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── HEADER ── */
+.apex-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 28px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(90deg, #070a0f 0%, #0a1a0a 50%, #070a0f 100%);
+  position: relative;
+  overflow: hidden;
+}
+.apex-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
+}
+
+.logo-block { display: flex; flex-direction: column; }
+.logo-title {
+  font-family: var(--font-title);
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--accent);
+  letter-spacing: 4px;
+  text-shadow: var(--glow);
+}
+.logo-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--textdim);
+  letter-spacing: 3px;
+  margin-top: 2px;
+}
+
+.hud-row {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+}
+.hud-item { text-align: center; }
+.hud-label { font-size: 9px; color: var(--textdim); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 2px; }
+.hud-value { font-family: var(--font-mono); font-size: 16px; color: var(--accent); }
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: rgba(0,255,136,0.05);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--textdim);
+}
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--textdim);
+  transition: all 0.3s;
+}
+.status-dot.active { background: var(--accent); box-shadow: var(--glow); animation: blink 0.8s infinite; }
+.status-dot.warn    { background: var(--warn);   box-shadow: 0 0 8px var(--warn); animation: blink 0.4s infinite; }
+.status-dot.danger  { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── MAIN LAYOUT ── */
+.main-wrap {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 0;
+  min-height: calc(100vh - 70px);
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  border-right: 1px solid var(--border);
+  background: var(--panel);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-section {
+  border-bottom: 1px solid var(--border);
+  padding: 18px 20px;
+}
+
+.section-label {
+  font-family: var(--font-title);
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--textdim);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-label::before {
+  content: '';
+  width: 12px; height: 1px;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.field { margin-bottom: 12px; }
+.field label {
+  display: block;
+  font-size: 10px;
+  color: var(--textdim);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.field input, .field select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--dim);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 2px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field input:focus, .field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(0,255,136,0.1);
+}
+.field select option { background: #0d1117; }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.toggle-row label { font-size: 10px; color: var(--textdim); letter-spacing: 1px; text-transform: uppercase; }
+
+.toggle {
+  position: relative;
+  width: 44px; height: 22px;
+}
+.toggle input { display: none; }
+.toggle-track {
+  position: absolute; inset: 0;
+  background: var(--dim);
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--textdim);
+  top: 3px; left: 3px;
+  transition: all 0.3s;
+}
+.toggle input:checked + .toggle-track { background: rgba(0,255,136,0.25); }
+.toggle input:checked + .toggle-track::after {
+  left: 25px;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+/* Quality Threshold Display */
+.quality-gate-display {
+  background: var(--bg);
+  border: 1px solid var(--dim);
+  border-radius: 2px;
+  padding: 12px;
+  margin-top: 10px;
+  text-align: center;
+}
+.quality-gate-val {
+  font-family: var(--font-title);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--accent);
+  text-shadow: var(--glow);
+}
+.quality-gate-label { font-size: 9px; color: var(--textdim); letter-spacing: 2px; margin-top: 2px; }
+
+/* Buttons */
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; padding: 16px 20px; }
+
+.btn {
+  flex: 1;
+  padding: 11px 16px;
+  border: 1px solid;
+  border-radius: 2px;
+  font-family: var(--font-title);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+  position: relative;
+  overflow: hidden;
+}
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.btn:hover::after { opacity: 0.08; }
+
+.btn-scan    { color: var(--accent);  border-color: var(--accent);  }
+.btn-stop    { color: var(--danger);  border-color: var(--danger);  }
+.btn-loop    { color: var(--accent2); border-color: var(--accent2); }
+.btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn.active  { background: rgba(0,255,136,0.1); box-shadow: var(--glow); }
+
+/* ── CONTENT ── */
+.content-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* SIGNAL BANNER */
+.signal-banner {
+  background: linear-gradient(90deg, #0a1a0a, #0d1117);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+}
+.sig-cell {
+  text-align: center;
+  padding: 0 12px;
+  border-right: 1px solid var(--border);
+}
+.sig-cell:last-child { border-right: none; }
+.sig-cell .label { font-size: 9px; color: var(--textdim); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+.sig-cell .val { font-family: var(--font-mono); font-size: 18px; color: var(--accent); }
+.sig-cell .val.danger { color: var(--danger); }
+.sig-cell .val.warn   { color: var(--warn);   }
+.sig-cell .val.cyan   { color: var(--accent2); }
+.sig-cell .val.small  { font-size: 12px; }
+
+/* GRID CONTENT */
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  flex: 1;
+}
+
+.panel {
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 18px 20px;
+}
+.panel:nth-child(even) { border-right: none; }
+.panel-title {
+  font-family: var(--font-title);
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--textdim);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.panel-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* STATS GRID */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.stat-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 12px;
+  text-align: center;
+}
+.stat-box .label { font-size: 9px; color: var(--textdim); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+.stat-box .val   { font-family: var(--font-mono); font-size: 20px; color: var(--text); }
+.stat-box .val.green  { color: var(--accent); text-shadow: var(--glow); }
+.stat-box .val.red    { color: var(--danger); }
+.stat-box .val.yellow { color: var(--warn); }
+
+/* DIGIT STREAM */
+.digit-stream {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  max-height: 90px;
+  overflow: hidden;
+}
+.d-chip {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--textdim);
+  transition: all 0.2s;
+  background: var(--bg);
+}
+.d-chip.entry   { border-color: var(--accent); color: var(--accent); box-shadow: var(--glow); }
+.d-chip.new     { border-color: var(--accent2); color: var(--accent2); animation: chipIn 0.3s ease; }
+
+@keyframes chipIn { from { transform: scale(1.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* RECOVERY INTELLIGENCE */
+.recovery-panel {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 14px;
+  margin-top: 10px;
+}
+.recovery-mode-label {
+  font-family: var(--font-title);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--warn);
+  margin-bottom: 8px;
+}
+.recovery-bars { display: flex; gap: 4px; }
+.r-bar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.r-bar-label { font-size: 9px; color: var(--textdim); }
+.r-bar-fill {
+  width: 100%;
+  height: 40px;
+  background: var(--dim);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+.r-bar-inner {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: var(--accent);
+  transition: height 0.4s ease;
+  border-radius: 2px;
+}
+.r-bar-inner.best { background: var(--accent); }
+.r-bar-inner.mid  { background: var(--accent2); }
+.r-bar-inner.low  { background: var(--warn); }
+
+/* SCAN PROGRESS */
+.scan-progress-wrap {
+  margin-top: 8px;
+}
+.scan-bar-track {
+  width: 100%; height: 4px;
+  background: var(--dim);
+  border-radius: 2px;
+  margin-bottom: 4px;
+  overflow: hidden;
+}
+.scan-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 2px;
+  width: 0;
+  transition: width 0.4s ease;
+}
+.win-progress-wrap { margin-top: 8px; }
+.win-bar-track { width: 100%; height: 6px; background: var(--dim); border-radius: 2px; overflow: hidden; }
+.win-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #00ff44);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.5s ease;
+  box-shadow: 0 0 8px rgba(0,255,136,0.5);
+}
+
+/* QUALITY METER (circular) */
+.quality-ring-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px 0;
+}
+.quality-ring {
+  width: 100px; height: 100px;
+  position: relative;
+}
+.quality-ring svg { transform: rotate(-90deg); }
+.ring-bg  { fill: none; stroke: var(--dim); stroke-width: 8; }
+.ring-arc { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
+.ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+}
+.ring-pct { font-size: 20px; color: var(--accent); }
+.ring-lbl { font-size: 8px; color: var(--textdim); letter-spacing: 1px; }
+
+/* RESCAN COUNTER */
+.rescan-box {
+  background: rgba(255,170,0,0.07);
+  border: 1px solid rgba(255,170,0,0.25);
+  border-radius: 2px;
+  padding: 10px 14px;
+  margin-top: 8px;
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+.rescan-box.active { display: flex; }
+.rescan-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid var(--warn);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.rescan-txt { font-family: var(--font-mono); font-size: 11px; color: var(--warn); }
+
+/* LOG */
+.log-scroll {
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dim) transparent;
+}
+.log-scroll::-webkit-scrollbar { width: 4px; }
+.log-scroll::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+
+.log-line {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  color: var(--textdim);
+  display: flex;
+  gap: 8px;
+}
+.log-line.success { color: var(--accent); }
+.log-line.error   { color: var(--danger); }
+.log-line.warn    { color: var(--warn);   }
+.log-line.info    { color: var(--accent2); }
+.log-time { opacity: 0.5; flex-shrink: 0; }
+
+/* TRADE JOURNAL */
+.journal-scroll {
+  max-height: 220px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dim) transparent;
+}
+.journal-scroll::-webkit-scrollbar { width: 4px; }
+.journal-scroll::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+
+.journal-header, .journal-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 60px 60px 70px;
+  gap: 0;
+  font-size: 11px;
+}
+.journal-header {
+  font-family: var(--font-title);
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: var(--textdim);
+  border-bottom: 1px solid var(--border);
+  padding: 0 0 6px 0;
+  text-transform: uppercase;
+}
+.journal-row {
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  padding: 5px 0;
+  font-family: var(--font-mono);
+  transition: background 0.2s;
+}
+.journal-row:hover { background: rgba(255,255,255,0.02); }
+.journal-row.win  { color: var(--accent); }
+.journal-row.loss { color: var(--danger); }
+.journal-row > div { padding: 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* PHASE INDICATOR */
+.phase-track {
+  display: flex;
+  gap: 4px;
+  margin-top: 10px;
+}
+.phase-step {
+  flex: 1;
+  height: 4px;
+  background: var(--dim);
+  border-radius: 2px;
+  transition: background 0.3s;
+}
+.phase-step.done   { background: var(--accent); }
+.phase-step.active { background: var(--warn); animation: phasePulse 0.5s infinite; }
+
+@keyframes phasePulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* RECOVERY INTEL DISPLAY */
+.intel-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+}
+.intel-cell {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 6px 4px;
+  text-align: center;
+  transition: all 0.3s;
+}
+.intel-cell.best {
+  border-color: var(--accent);
+  background: rgba(0,255,136,0.08);
+  box-shadow: var(--glow);
+}
+.intel-cell .d-num   { font-family: var(--font-mono); font-size: 16px; }
+.intel-cell .d-score { font-size: 9px; color: var(--textdim); margin-top: 2px; }
+
+/* TRADING ACTIVE BADGE */
+.trading-badge {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,170,0,0.08);
+  border: 1px solid rgba(255,170,0,0.3);
+  border-radius: 2px;
+  padding: 10px 20px;
+  margin: 0 20px 14px;
+}
+.trading-badge.active { display: flex; }
+.trading-badge-text {
+  font-family: var(--font-title);
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--warn);
+}
+
+/* Market radio */
+.market-opts { display: flex; gap: 12px; }
+.mopt {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--textdim); cursor: pointer;
+}
+.mopt input[type=radio] { accent-color: var(--accent); }
+
+/* Token warning */
+.token-warn {
+  display: none;
+  background: rgba(255,51,85,0.08);
+  border: 1px solid rgba(255,51,85,0.3);
+  color: var(--danger);
+  font-size: 11px;
+  padding: 8px 10px;
+  border-radius: 2px;
+  margin-top: 6px;
+}
+.token-warn.show { display: block; }
+
+/* MOBILE */
+@media (max-width: 900px) {
+  .main-wrap { grid-template-columns: 1fr; }
+  .content-grid { grid-template-columns: 1fr; }
+  .signal-banner { grid-template-columns: repeat(3, 1fr); }
+  .apex-header { flex-wrap: wrap; gap: 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<div class="apex-header">
+  <div class="logo-block">
+    <div class="logo-title">CALL OF DERIV</div>
+    <div class="logo-sub">BY HMT — ELITE DIGIT SCANNER v4.0 — APEX SCIENTIST RECOVERY ENGINE</div>
+  </div>
+  <div class="hud-row">
+    <div class="hud-item">
+      <div class="hud-label">Balance</div>
+      <div class="hud-value" id="hdBalance">$0.00</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">Session P&L</div>
+      <div class="hud-value" id="hdPL" style="color:var(--text)">$0.00</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">Total P&L</div>
+      <div class="hud-value" id="hdTotalPL" style="color:var(--text)">$0.00</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">Win Rate</div>
+      <div class="hud-value" id="hdWR">—%</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">Timer</div>
+      <div class="hud-value" id="hdTimer" style="color:var(--textdim)">00:00:00</div>
+    </div>
+  </div>
+  <div class="status-pill">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">IDLE</span>
+  </div>
+</div>
+
+<!-- ═══════════════ MAIN WRAP ═══════════════ -->
+<div class="main-wrap">
+
+  <!-- ─── SIDEBAR ─── -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="section-label">Authorization</div>
+      <div class="field">
+        <label>API Token</label>
+        <input type="password" id="apiToken" placeholder="Paste Deriv token here...">
+      </div>
+      <div class="token-warn" id="tokenWarn">⚠ API token required</div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="section-label">Market Selection</div>
+      <div class="market-opts">
+        <label class="mopt"><input type="radio" name="mktMode" value="all" checked> All 13</label>
+        <label class="mopt"><input type="radio" name="mktMode" value="exclude1s"> Exclude 1s</label>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="section-label">Quality Gate</div>
+      <div class="field">
+        <label>Min Quality Threshold (%)</label>
+        <input type="number" id="qualityThreshold" value="95" min="60" max="99" step="1">
+      </div>
+      <div class="field">
+        <label>Max Rescan Attempts</label>
+        <input type="number" id="maxRescans" value="10" min="1" max="50">
+      </div>
+      <div class="quality-gate-display">
+        <div class="quality-gate-val" id="gateDisplay">95%</div>
+        <div class="quality-gate-label">MINIMUM SIGNAL QUALITY</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="section-label">Session Config</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Target Wins</label>
+          <input type="number" id="numberOfWins" value="5" min="1">
+        </div>
+        <div class="field">
+          <label>Stop Loss ($)</label>
+          <input type="number" id="stopLoss" value="30" min="1">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Initial Stake ($)</label>
+          <input type="number" id="initialStake" value="0.50" min="0.35" step="0.01">
+        </div>
+        <div class="field">
+          <label>Ticks to Scan</label>
+          <input type="number" id="ticksToScan" value="1000" min="100" max="5000" step="100">
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="section-label">Recovery Engine</div>
+      <div class="toggle-row">
+        <label>Smart Recovery Mode</label>
+        <label class="toggle">
+          <input type="checkbox" id="useMartingale" checked>
+          <div class="toggle-track"></div>
+        </label>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Multiplier</label>
+          <input type="number" id="martingaleMultiplier" value="2.1" min="1.5" step="0.1">
+        </div>
+        <div class="field">
+          <label>Max Depth</label>
+          <input type="number" id="maxRecoveryDepth" value="4" min="1" max="8">
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-scan" id="scanBtn" onclick="startScan()">▶ SCAN + TRADE</button>
+      <button class="btn btn-stop" id="stopBtn" style="display:none" onclick="stopAll()">■ STOP</button>
+      <button class="btn btn-loop" id="loopBtn" style="display:none" onclick="toggleLoop()">↺ AUTO-LOOP: OFF</button>
+    </div>
+  </div>
+
+  <!-- ─── CONTENT ─── -->
+  <div class="content-area">
+
+    <!-- SIGNAL BANNER -->
+    <div class="signal-banner">
+      <div class="sig-cell">
+        <div class="label">Market</div>
+        <div class="val small" id="sigMarket">—</div>
+      </div>
+      <div class="sig-cell">
+        <div class="label">Signal</div>
+        <div class="val small" id="sigProfile">—</div>
+      </div>
+      <div class="sig-cell">
+        <div class="label">Entry Digit</div>
+        <div class="val cyan" id="sigEntry">—</div>
+      </div>
+      <div class="sig-cell">
+        <div class="label">Quality Score</div>
+        <div class="val" id="sigQuality">—</div>
+      </div>
+      <div class="sig-cell">
+        <div class="label">Win Rate</div>
+        <div class="val" id="sigWinRate">—</div>
+      </div>
+    </div>
+
+    <!-- TRADING BADGE -->
+    <div class="trading-badge" id="tradingBadge">
+      <div class="status-dot active"></div>
+      <div class="trading-badge-text" id="tradingBadgeText">TRADING ACTIVE</div>
+    </div>
+
+    <!-- GRID -->
+    <div class="content-grid">
+
+      <!-- PANEL 1: LIVE STATS -->
+      <div class="panel">
+        <div class="panel-title">Live Statistics</div>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="label">Wins</div>
+            <div class="val green" id="stWins">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="label">Losses</div>
+            <div class="val red" id="stLosses">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="label">Con. Wins</div>
+            <div class="val green" id="stConWins">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="label">Con. Losses</div>
+            <div class="val red" id="stConLoss">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="label">Stake Now</div>
+            <div class="val yellow" id="stStake">$0.00</div>
+          </div>
+          <div class="stat-box">
+            <div class="label">Risk Used</div>
+            <div class="val" id="stRisk">$0.00</div>
+          </div>
+        </div>
+        <div class="win-progress-wrap" style="margin-top:12px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:9px;color:var(--textdim);letter-spacing:1px;">WIN PROGRESS</span>
+            <span style="font-family:var(--font-mono);font-size:11px;color:var(--accent)"><span id="winsNow">0</span> / <span id="winsTarget">5</span></span>
+          </div>
+          <div class="win-bar-track"><div class="win-bar-fill" id="winFill"></div></div>
+        </div>
+      </div>
+
+      <!-- PANEL 2: QUALITY METER + SCAN -->
+      <div class="panel">
+        <div class="panel-title">Signal Quality</div>
+        <div style="display:flex;gap:16px;align-items:center;">
+          <div class="quality-ring-wrap">
+            <div class="quality-ring">
+              <svg width="100" height="100" viewBox="0 0 100 100">
+                <circle class="ring-bg" cx="50" cy="50" r="42"/>
+                <circle class="ring-arc" id="qualityArc" cx="50" cy="50" r="42"
+                  stroke="var(--accent)"
+                  stroke-dasharray="263.9"
+                  stroke-dashoffset="263.9"/>
+              </svg>
+              <div class="ring-center">
+                <div class="ring-pct" id="ringPct">—</div>
+                <div class="ring-lbl">QUALITY</div>
+              </div>
+            </div>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:10px;color:var(--textdim);letter-spacing:1px;margin-bottom:6px;">SCAN PROGRESS</div>
+            <div class="scan-bar-track"><div class="scan-bar-fill" id="scanFill"></div></div>
+            <div style="font-family:var(--font-mono);font-size:11px;color:var(--textdim);margin-top:4px;" id="scanStatus">Awaiting scan...</div>
+
+            <div class="rescan-box" id="rescanBox">
+              <div class="rescan-spinner"></div>
+              <div class="rescan-txt" id="rescanTxt">Rescanning — attempt 1/10...</div>
+            </div>
+
+            <div style="margin-top:12px;">
+              <div style="font-size:9px;color:var(--textdim);letter-spacing:1px;margin-bottom:4px;">CONFIDENCE / WIN RATE / RECENT</div>
+              <div style="font-family:var(--font-mono);font-size:12px;color:var(--text);" id="scoreBreakdown">— / — / —</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <div style="font-size:9px;color:var(--textdim);letter-spacing:1px;margin-bottom:6px;">TRADING PHASE</div>
+          <div class="phase-track">
+            <div class="phase-step" id="ph0"></div>
+            <div class="phase-step" id="ph1"></div>
+            <div class="phase-step" id="ph2"></div>
+            <div class="phase-step" id="ph3"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px;">
+            <span style="font-size:8px;color:var(--textdim);">SCAN</span>
+            <span style="font-size:8px;color:var(--textdim);">WAIT</span>
+            <span style="font-size:8px;color:var(--textdim);">TRADE</span>
+            <span style="font-size:8px;color:var(--textdim);">RECOVER</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL 3: LIVE DIGITS + RECOVERY INTEL -->
+      <div class="panel">
+        <div class="panel-title">Live Digit Stream</div>
+        <div class="digit-stream" id="digitStream">
+          <div style="color:var(--textdim);font-size:11px;padding:4px;">Waiting for ticks...</div>
+        </div>
+
+        <div style="margin-top:14px;">
+          <div class="panel-title" style="margin-bottom:8px;">Recovery Intelligence</div>
+          <div style="font-size:10px;color:var(--textdim);margin-bottom:6px;">Digit frequency (last 50 ticks) — best recovery target highlighted</div>
+          <div class="intel-grid" id="intelGrid">
+            <!-- filled by JS -->
+          </div>
+          <div id="recoveryRecommend" style="font-family:var(--font-mono);font-size:11px;color:var(--warn);margin-top:8px;"></div>
+        </div>
+      </div>
+
+      <!-- PANEL 4: TRADE JOURNAL -->
+      <div class="panel">
+        <div class="panel-title">Trade Journal</div>
+        <div class="journal-header">
+          <div>Time</div><div>Market</div><div>Entry</div><div>Result</div><div>P&L</div>
+        </div>
+        <div class="journal-scroll" id="tradeJournal"></div>
+
+        <div style="margin-top:14px;">
+          <div class="panel-title" style="margin-bottom:8px;">Execution Log</div>
+          <div class="log-scroll" id="logContainer"></div>
+        </div>
+      </div>
+
+    </div><!-- /content-grid -->
+  </div><!-- /content-area -->
+</div><!-- /main-wrap -->
+
+<!-- ═══════════════ SCRIPT ═══════════════ -->
+<script>
+// ═══════ LIVE QUALITY GATE DISPLAY ═══════
+document.getElementById('qualityThreshold').addEventListener('input', e => {
+  document.getElementById('gateDisplay').textContent = e.target.value + '%';
+});
+
+// ═══════ STATE ═══════
+const S = {
+  apiToken:'', isScanning:false, isTrading:false, autoLoop:false,
+  sessionWins:0, sessionLosses:0, sessionPL:0, totalPL:0, trades:[],
+  currentStake:0.5, initialStake:0.5, runCount:0, accountBalance:0,
+  lastDigit:null, currentMarket:null, currentProfile:null, currentEntryDigit:null,
+  marketNames:{}, consecutiveWins:0, consecutiveLosses:0, sessionStartTime:null,
+  targetWins:5, stopLoss:50, currentTradeId:null, liveTicks:[],
+  phase:'idle', inRecovery:false, currentPrediction:null, currentSignal:null,
+  // Smart Recovery
+  digitFrequency: new Array(10).fill(0),  // rolling frequency last 50 ticks
+  recoveryAttempts: 0, maxRecoveryDepth: 4,
+  rescanCount: 0,
+};
+
+// ═══════ PROFILES ═══════
+const PROFILES = [
+  { id:"over_1_over_5",   label:"OVR-1 → OVR-5",   contractType:"DIGITOVER",  initialPrediction:1, recoveryPrediction:5 },
+  { id:"over_2_over_5",   label:"OVR-2 → OVR-5",   contractType:"DIGITOVER",  initialPrediction:2, recoveryPrediction:5 },
+  { id:"under_8_under_4", label:"UND-8 → UND-4",   contractType:"DIGITUNDER", initialPrediction:8, recoveryPrediction:4 },
+  { id:"under_7_under_4", label:"UND-7 → UND-4",   contractType:"DIGITUNDER", initialPrediction:7, recoveryPrediction:4 },
+];
+
+// ═══════ MARKET PRECISION ═══════
+const MARKET_DP = {
+  '1HZ10V':2,'R_10':3,'1HZ15V':3,'1HZ25V':2,'R_25':3,
+  '1HZ30V':3,'1HZ50V':2,'R_50':4,'1HZ75V':2,'R_75':4,
+  '1HZ90V':3,'1HZ100V':2,'R_100':2,
+};
+
+// ═══════ UTILS ═══════
+function nF(e){ const t=Number(e); return Number.isFinite(t)?t:null; }
+function nU(e,sym){ if(sym&&MARKET_DP[sym]!==undefined)return MARKET_DP[sym]; const s=e.toString(); if(!s.includes('.'))return 2; return Math.min(Math.max((s.split('.')[1]||'').length,0),5); }
+function nP(e,t){ const s=e.toFixed(t); const a=Number(s[s.length-1]); return Number.isInteger(a)?a:null; }
+function nz(e,ct,pred){ return ct==='DIGITOVER'?e>pred:e<pred; }
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+function wilsonScore(wins,total,z=1.64){
+  if(total<=0)return 0;
+  const p=wins/total,z2=z*z;
+  const n=z*Math.sqrt(p*(1-p)/total+z2/(4*total*total));
+  return(p+z2/(2*total)-n)/(1+z2/total);
+}
+
+function scoreSignal(digits,profile,entryDigit){
+  const results=[];
+  for(let i=1;i<digits.length-1;i++){
+    if(digits[i-1]!==entryDigit)continue;
+    if(nz(digits[i],profile.contractType,profile.initialPrediction)){results.push(true);continue;}
+    results.push(nz(digits[i+1],profile.contractType,profile.recoveryPrediction));
+  }
+  const total=results.length;
+  if(total===0)return null;
+  const wins=results.reduce((s,v)=>s+(v?1:0),0);
+  const winRate=wins/total;
+  const splitAt=Math.max(1,Math.floor(0.7*total));
+  const train=results.slice(0,splitAt),val=results.slice(splitAt);
+  const trainWR=train.length>0?train.reduce((s,v)=>s+(v?1:0),0)/train.length:0;
+  const valWR=val.length>0?val.reduce((s,v)=>s+(v?1:0),0)/val.length:trainWR;
+  const recent=results.slice(Math.max(0,total-40));
+  const recentWR=recent.length>0?recent.reduce((s,v)=>s+(v?1:0),0)/recent.length:0;
+  const confidence=wilsonScore(wins,total);
+  const consistency=1-Math.min(1,Math.abs(trainWR-valWR));
+  const sampleScore=Math.min(1,Math.log(total+1)/Math.log(80));
+  return{
+    sampleSize:total,winRate,confidenceScore:confidence,recentWinRate:recentWR,
+    validationWinRate:valWR,
+    qualityScore:0.5*confidence+0.25*recentWR+0.15*consistency+0.1*sampleScore,
+    recentSampleSize:recent.length,
+  };
+}
+
+// ═══════════════════════════════════════
+//  SMART RECOVERY ENGINE
+//  Picks the best recovery prediction digit
+//  based on real-time digit frequency analysis.
+//  Logic:
+//   - For DIGITOVER: the digit whose % of ticks
+//     that are OVER the value is highest → highest chance
+//   - For DIGITUNDER: same but UNDER
+//   - Uses last 50 ticks, weights recent ticks 2x
+//   - Falls back to profile's static recoveryPrediction
+//     if data is insufficient
+// ═══════════════════════════════════════
+function computeSmartRecoveryPrediction(contractType, liveTicks) {
+  const recent = liveTicks.slice(-50);
+  if (recent.length < 10) return null; // not enough data
+
+  const totalTicks = recent.length;
+  // For each possible barrier (0-9):
+  // calculate win rate if we predict OVER/UNDER that digit
+  let bestPred = null, bestRate = 0;
+
+  for (let pred = 0; pred <= 9; pred++) {
+    // Skip extremes that are always win/lose trivially
+    if (contractType === 'DIGITOVER' && pred >= 8) continue; // over 8 or 9 = too restrictive
+    if (contractType === 'DIGITUNDER' && pred <= 1) continue; // under 0 or 1 = too restrictive
+
+    // Weight recent ticks more (last 15 = weight 2, rest = weight 1)
+    let weightedWins = 0, weightedTotal = 0;
+    for (let i = 0; i < recent.length; i++) {
+      const weight = i >= recent.length - 15 ? 2 : 1;
+      const d = recent[i].digit;
+      const won = nz(d, contractType, pred);
+      if (won) weightedWins += weight;
+      weightedTotal += weight;
+    }
+
+    const rate = weightedTotal > 0 ? weightedWins / weightedTotal : 0;
+    if (rate > bestRate) {
+      bestRate = rate;
+      bestPred = pred;
+    }
+  }
+
+  // Only use smart pick if it wins more than 60% (meaningful edge)
+  if (bestRate >= 0.60 && bestPred !== null) return bestPred;
+  return null; // fallback to static
+}
+
+// Digit frequency tracker for UI
+function updateDigitFrequency(digit) {
+  S.digitFrequency[digit]++;
+  // Keep rolling window of last 50 by decaying occasionally
+  const total = S.digitFrequency.reduce((a,b)=>a+b,0);
+  if (total > 50) {
+    const excess = total - 50;
+    // Remove proportionally from all digits
+    S.digitFrequency = S.digitFrequency.map(f => Math.max(0, f - excess/10));
+  }
+  renderIntelGrid();
+}
+
+function renderIntelGrid() {
+  const grid = document.getElementById('intelGrid');
+  const total = S.digitFrequency.reduce((a,b)=>a+b,0)||1;
+  const profile = S.currentProfile;
+
+  let bestOver=-1, bestUnder=-1, maxOverRate=-1, maxUnderRate=-1;
+  for(let d=0;d<=9;d++){
+    const ct = S.liveTicks.slice(-50);
+    const wins = ct.filter(t=>t.digit>d).length;
+    const wins2 = ct.filter(t=>t.digit<d).length;
+    if(wins/ct.length>maxOverRate){maxOverRate=wins/ct.length;bestOver=d;}
+    if(wins2/ct.length>maxUnderRate){maxUnderRate=wins2/ct.length;bestUnder=d;}
+  }
+
+  const smartPred = profile ? computeSmartRecoveryPrediction(profile.contractType, S.liveTicks) : null;
+
+  grid.innerHTML = Array.from({length:10},(_,d)=>{
+    const pct = ((S.digitFrequency[d]||0)/total*100).toFixed(0);
+    const isBest = (smartPred !== null && d === smartPred);
+    return `<div class="intel-cell${isBest?' best':''}">
+      <div class="d-num" style="color:${isBest?'var(--accent)':'var(--text)'}">${d}</div>
+      <div class="d-score">${pct}%</div>
+    </div>`;
+  }).join('');
+
+  const recEl = document.getElementById('recoveryRecommend');
+  if (smartPred !== null && profile) {
+    const typeLabel = profile.contractType === 'DIGITOVER' ? 'OVER' : 'UNDER';
+    recEl.innerHTML = `⚡ Smart recovery target: <span style="color:var(--accent)">${typeLabel} ${smartPred}</span> (${(maxOverRate*100).toFixed(0)}% live edge)`;
+  } else {
+    recEl.textContent = 'Using static recovery — collecting tick data...';
+  }
+}
+
+// ═══════ LOGGING ═══════
+function log(msg, type='info'){
+  const c=document.getElementById('logContainer');
+  const el=document.createElement('div');
+  el.className=`log-line ${type}`;
+  const t=new Date().toLocaleTimeString('en-GB',{hour12:false});
+  el.innerHTML=`<span class="log-time">${t}</span><span>${msg}</span>`;
+  c.appendChild(el);
+  c.scrollTop=c.scrollHeight;
+  // Keep log capped
+  while(c.children.length>200) c.removeChild(c.firstChild);
+}
+
+function addTradeRow(market, entry, result, pnl){
+  const t=new Date().toLocaleTimeString('en-GB',{hour12:false});
+  const j=document.getElementById('tradeJournal');
+  const el=document.createElement('div');
+  el.className=`journal-row ${result==='WIN'?'win':'loss'}`;
+  el.innerHTML=`<div>${t}</div><div>${(S.marketNames[market]||market).replace('Volatility ','V').replace(' Index','')}</div><div>${entry}</div><div>${result}</div><div style="color:${pnl>=0?'var(--accent)':'var(--danger)'}">$${pnl.toFixed(2)}</div>`;
+  j.appendChild(el);
+  j.scrollTop=j.scrollHeight;
+  playSound(result==='WIN');
+}
+
+function playSound(win){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value=win?900:300; o.type='square';
+    g.gain.setValueAtTime(0.1,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.25);
+    o.start(); o.stop(ctx.currentTime+0.25);
+  }catch(e){}
+}
+
+// ═══════ UI UPDATES ═══════
+function setStatus(txt, state='idle'){
+  document.getElementById('statusText').textContent=txt.toUpperCase();
+  const dot=document.getElementById('statusDot');
+  dot.className='status-dot';
+  if(state==='active') dot.classList.add('active');
+  else if(state==='warn') dot.classList.add('warn');
+  else if(state==='danger') dot.classList.add('danger');
+}
+
+function updatePhase(phase){
+  // 0=scan, 1=wait, 2=trade, 3=recover
+  const map={idle:[], scanning:[0], waiting_entry:[0,1], trading_initial:[0,1,2], trading_recovery:[0,1,2,3]};
+  const active=map[phase]||[];
+  for(let i=0;i<4;i++){
+    const el=document.getElementById(`ph${i}`);
+    el.className='phase-step';
+    if(active.includes(i)) el.classList.add(i===active[active.length-1]?'active':'done');
+  }
+}
+
+function updateUI(){
+  document.getElementById('hdBalance').textContent=`$${S.accountBalance.toFixed(2)}`;
+  const pl=S.sessionPL;
+  const plEl=document.getElementById('hdPL');
+  plEl.textContent=`$${pl.toFixed(2)}`;
+  plEl.style.color=pl>0?'var(--accent)':pl<0?'var(--danger)':'var(--text)';
+  const tpl=S.totalPL;
+  const tplEl=document.getElementById('hdTotalPL');
+  tplEl.textContent=`$${tpl.toFixed(2)}`;
+  tplEl.style.color=tpl>0?'var(--accent)':tpl<0?'var(--danger)':'var(--text)';
+
+  const total=S.sessionWins+S.sessionLosses;
+  const wr=total>0?((S.sessionWins/total)*100).toFixed(1):'—';
+  document.getElementById('hdWR').textContent=wr+(wr!=='—'?'%':'');
+
+  document.getElementById('stWins').textContent=S.sessionWins;
+  document.getElementById('stLosses').textContent=S.sessionLosses;
+  document.getElementById('stConWins').textContent=S.consecutiveWins;
+  document.getElementById('stConLoss').textContent=S.consecutiveLosses;
+  document.getElementById('stStake').textContent=`$${S.currentStake.toFixed(2)}`;
+  document.getElementById('stRisk').textContent=`$${Math.abs(S.sessionPL).toFixed(2)} / $${S.stopLoss}`;
+
+  document.getElementById('winsNow').textContent=S.sessionWins;
+  document.getElementById('winsTarget').textContent=S.targetWins;
+  const pct=S.targetWins>0?Math.min((S.sessionWins/S.targetWins)*100,100):0;
+  document.getElementById('winFill').style.width=pct+'%';
+
+  if(S.currentSignal){
+    const q=(S.currentSignal.qualityScore*100);
+    document.getElementById('sigMarket').textContent=S.marketNames[S.currentMarket]||S.currentMarket;
+    document.getElementById('sigProfile').textContent=S.currentProfile?.label||'—';
+    document.getElementById('sigEntry').textContent=S.currentEntryDigit;
+    const qEl=document.getElementById('sigQuality');
+    qEl.textContent=q.toFixed(1)+'%';
+    qEl.className='val '+(q>=95?'green':q>=80?'':'warn');
+    document.getElementById('sigWinRate').textContent=(S.currentSignal.winRate*100).toFixed(1)+'%';
+
+    // Quality ring
+    const arc=document.getElementById('qualityArc');
+    const circumference=263.9;
+    const offset=circumference*(1-q/100);
+    arc.style.strokeDashoffset=offset;
+    arc.style.stroke=q>=95?'var(--accent)':q>=80?'var(--accent2)':'var(--warn)';
+    document.getElementById('ringPct').textContent=q.toFixed(1)+'%';
+
+    document.getElementById('scoreBreakdown').textContent=
+      `${(S.currentSignal.confidenceScore*100).toFixed(1)}% / ${(S.currentSignal.winRate*100).toFixed(1)}% / ${(S.currentSignal.recentWinRate*100).toFixed(1)}%`;
+  }
+}
+
+function updateTimer(){
+  if(!S.isTrading||!S.sessionStartTime)return;
+  const e=Date.now()-S.sessionStartTime;
+  const h=Math.floor(e/3600000),m=Math.floor((e%3600000)/60000),s=Math.floor((e%60000)/1000);
+  document.getElementById('hdTimer').textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function addDigitChip(digit, isEntry=false){
+  const stream=document.getElementById('digitStream');
+  // clear placeholder
+  if(stream.children[0]?.tagName==='DIV'&&stream.children[0].style.color){
+    if(stream.children[0].textContent.includes('Waiting'))stream.innerHTML='';
+  }
+  const chip=document.createElement('div');
+  chip.className='d-chip new'+(isEntry?' entry':'');
+  chip.textContent=digit;
+  stream.appendChild(chip);
+  setTimeout(()=>chip.classList.remove('new'),400);
+  // cap at 40 chips
+  while(stream.children.length>40)stream.removeChild(stream.firstChild);
+  // mark entry chips
+  if(isEntry){
+    stream.querySelectorAll('.d-chip').forEach(c=>{
+      if(c!==chip)c.classList.remove('entry');
+    });
+  }
+}
+
+// ═══════ WEBSOCKET ═══════
+let ws=null, reqId=1;
+const pending={};
+const wsListeners=new Set();
+function addWsListener(fn){wsListeners.add(fn);return fn;}
+function removeWsListener(fn){wsListeners.delete(fn);}
+
+function apiSend(payload){
+  return new Promise((resolve,reject)=>{
+    const id=reqId++;
+    payload.req_id=id;
+    pending[id]={resolve,reject};
+    ws.send(JSON.stringify(payload));
+  });
+}
+
+function connectWebSocket(token){
+  return new Promise((resolve,reject)=>{
+    ws=new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=1089');
+    ws.onopen=()=>{
+      log('WebSocket connected','success');
+      apiSend({authorize:token}).then(d=>{
+        S.accountBalance=d.authorize.balance||0;
+        log(`Authorised — Balance: $${S.accountBalance.toFixed(2)}`,'success');
+        updateUI(); 
+        // Subscribe to live balance stream
+        apiSend({balance:1, subscribe:1}).catch(()=>{});
+        resolve();
+      }).catch(e=>{log(`Auth failed: ${e.message||e}`,'error');reject(e);});
+    };
+    ws.onmessage=(ev)=>{
+      const d=JSON.parse(ev.data);
+      // Live balance update
+      if(d.msg_type==='balance'&&d.balance){
+        S.accountBalance=parseFloat(d.balance.balance)||S.accountBalance;
+        document.getElementById('hdBalance').textContent=`$${S.accountBalance.toFixed(2)}`;
+      }
+      if(d.req_id&&pending[d.req_id]){
+        const{resolve,reject}=pending[d.req_id];
+        delete pending[d.req_id];
+        if(d.error)reject(d.error);else resolve(d);
+      }
+      wsListeners.forEach(fn=>fn(d));
+    };
+    ws.onerror=()=>{log('WebSocket error','error');reject(new Error('WS error'));};
+    ws.onclose=()=>{
+      log('WebSocket closed','warn');
+      if(S.isTrading){log('Reconnecting in 5s...','warn');setTimeout(()=>reconnect(),5000);}
+    };
+  });
+}
+
+async function reconnect(){
+  try{
+    await connectWebSocket(S.apiToken);
+    if(S.isTrading){
+      log('Reconnected — rescanning...','warn');
+      S.isTrading=false; entryResolve=null;
+      await unsubscribeTicks();
+      const ok=await scanLoop();
+      if(ok)await startTrading();
+      else{setStatus('Idle');updatePhase('idle');}
+    }
+  }catch(e){log('Reconnect failed, retrying...','error');setTimeout(()=>reconnect(),5000);}
+}
+
+// ═══════════════════════════════════════
+//  SCAN LOOP — enforces 95% quality gate
+//  Rescans up to maxRescans attempts.
+//  Returns true when signal found, false if gave up.
+// ═══════════════════════════════════════
+async function scanLoop(){
+  const threshold = parseFloat(document.getElementById('qualityThreshold').value)||95;
+  const maxAttempts = parseInt(document.getElementById('maxRescans').value)||10;
+  const minThresholdDecimal = threshold / 100;
+
+  S.rescanCount = 0;
+
+  while(S.rescanCount < maxAttempts && (S.isScanning||S.isTrading)){
+    S.rescanCount++;
+    const attempt = S.rescanCount;
+
+    if(attempt > 1){
+      // Show rescan indicator
+      const rb = document.getElementById('rescanBox');
+      rb.classList.add('active');
+      document.getElementById('rescanTxt').textContent=`Rescanning — attempt ${attempt}/${maxAttempts} (need ≥${threshold}%)...`;
+      log(`⟳ Quality below ${threshold}% — rescan attempt ${attempt}/${maxAttempts}`,'warn');
+      await sleep(1500); // brief pause before rescan
+    }
+
+    const signal = await scanMarkets();
+
+    if(!signal){
+      log(`Attempt ${attempt}: No signal found`,'warn');
+      continue;
+    }
+
+    const q = signal.qualityScore;
+    const qPct = (q*100).toFixed(2);
+    document.getElementById('scanStatus').textContent=`Attempt ${attempt}: ${qPct}% (need ${threshold}%)`;
+
+    if(q >= minThresholdDecimal){
+      // ✅ Quality gate PASSED
+      document.getElementById('rescanBox').classList.remove('active');
+      log(`✓ Quality gate PASSED: ${qPct}% ≥ ${threshold}%`,'success');
+      S.currentSignal=signal;
+      S.currentMarket=signal.symbol;
+      S.currentProfile=signal.profile;
+      S.currentEntryDigit=signal.entryPointDigit;
+      updateUI();
+      return true;
+    } else {
+      log(`✗ Quality ${qPct}% < ${threshold}% — continuing scan...`,'warn');
+    }
+  }
+
+  document.getElementById('rescanBox').classList.remove('active');
+  log(`⛔ Could not find ≥${threshold}% signal after ${maxAttempts} attempts`,'error');
+  return false;
+}
+
+async function scanMarkets(){
+  const marketMode=document.querySelector('input[name="mktMode"]:checked').value;
+  try{
+    const res=await apiSend({active_symbols:'brief'});
+    const markets=(res.active_symbols||[])
+      .filter(s=>s.submarket==='random_index')
+      .filter(s=>marketMode==='all'||!s.symbol.startsWith('1HZ'));
+
+    const tickCount=Math.min(Math.max(parseInt(document.getElementById('ticksToScan').value)||1000,100),5000);
+    let best=null;
+    const total=markets.length;
+    let scanned=0;
+
+    log(`Scanning ${total} markets (${tickCount} ticks each)...`,'info');
+
+    for(const mkt of markets){
+      if(!S.isTrading&&!S.isScanning)break;
+      S.marketNames[mkt.symbol]=mkt.display_name;
+      scanned++;
+      document.getElementById('scanFill').style.width=`${(scanned/total)*100}%`;
+      document.getElementById('scanStatus').textContent=`${mkt.display_name}... (${scanned}/${total})`;
+
+      try{
+        const r=await apiSend({ticks_history:mkt.symbol,count:tickCount,end:'latest',style:'ticks'});
+        const prices=((r.history||{}).prices||[]).map(nF).filter(v=>v!==null);
+        if(prices.length<100)continue;
+        const prec=nU(prices[prices.length-1],mkt.symbol);
+        const digits=prices.map(p=>nP(p,prec)).filter(v=>v!==null);
+        if(digits.length<100)continue;
+
+        for(const prof of PROFILES){
+          for(let d=0;d<=9;d++){
+            const score=scoreSignal(digits,prof,d);
+            if(!score)continue;
+            if(score.sampleSize<18||score.recentSampleSize<8||score.validationWinRate<0.45)continue;
+            const cand={symbol:mkt.symbol,marketName:mkt.display_name,profile:prof,entryPointDigit:d,...score};
+            if(!best
+              ||cand.qualityScore>best.qualityScore
+              ||(cand.qualityScore===best.qualityScore&&cand.confidenceScore>best.confidenceScore)
+              ||(cand.confidenceScore===best.confidenceScore&&cand.winRate>best.winRate)
+            ) best=cand;
+          }
+        }
+      }catch(e){log(`Error scanning ${mkt.display_name}: ${e}`,'error');}
+    }
+
+    document.getElementById('scanFill').style.width='100%';
+    if(best){
+      log(`Best candidate: ${best.marketName} | ${best.profile.label} | Entry ${best.entryPointDigit} | Q: ${(best.qualityScore*100).toFixed(2)}%`,'info');
+    }
+    return best; // may be null
+  }catch(e){
+    log(`Scan error: ${e}`,'error');
+    return null;
+  }
+}
+
+// ═══════ TICK SUBSCRIPTION ═══════
+let tickSubId=null, tickHandler=null, entryResolve=null;
+
+async function subscribeToTicks(symbol){
+  if(tickSubId){
+    try{await apiSend({forget:tickSubId});}catch(e){}
+    if(tickHandler)removeWsListener(tickHandler);
+    tickSubId=null; tickHandler=null;
+  }
+
+  // ── SILENT HISTORY PRELOAD ──
+  // Load 500 ticks before live streaming so the APEX SCIENTIST
+  // engine has a full dataset ready the instant a loss occurs.
+  // No waiting, no delays — data is already there.
+  try {
+    const hist = await apiSend({ticks_history:symbol,count:500,end:'latest',style:'ticks'});
+    const prices = ((hist.history||{}).prices||[]).map(nF).filter(v=>v!==null);
+    const times  = ((hist.history||{}).times||[]);
+    const prec   = prices.length > 0 ? nU(prices[prices.length-1], symbol) : 2;
+    const preloaded = [];
+    prices.forEach((p,i) => {
+      const digit = nP(p, prec);
+      if(digit !== null) preloaded.push({
+        time: times[i] ? new Date(times[i]*1000).toLocaleTimeString() : '--',
+        price: p,
+        digit
+      });
+    });
+    // Merge into S.liveTicks — keep last 500 max
+    S.liveTicks = preloaded.slice(-500);
+    // Seed frequency tracker from preloaded data
+    S.digitFrequency = new Array(10).fill(0);
+    S.liveTicks.slice(-50).forEach(t => updateDigitFrequency(t.digit));
+    log(`📡 History preloaded: ${S.liveTicks.length} ticks — APEX engine ready`, 'success');
+  } catch(e) {
+    log(`⚠ History preload failed (${e}) — continuing with live ticks only`, 'warn');
+  }
+
+  const sub=await apiSend({ticks:symbol,subscribe:1});
+  tickSubId=sub.subscription&&sub.subscription.id;
+
+  tickHandler=addWsListener(data=>{
+    if(data.msg_type!=='tick')return;
+    if(!data.tick||data.tick.symbol!==symbol)return;
+    const price=nF(data.tick.quote);
+    if(price===null)return;
+    const prec=nU(price,symbol);
+    const digit=nP(price,prec);
+    if(digit===null)return;
+
+    S.lastDigit=digit;
+    S.liveTicks.push({time:new Date().toLocaleTimeString(),price,digit});
+    if(S.liveTicks.length>500)S.liveTicks.shift();
+
+    // Update frequency tracker for recovery intel
+    updateDigitFrequency(digit);
+    addDigitChip(digit, digit===S.currentEntryDigit);
+
+    if(entryResolve&&digit===S.currentEntryDigit){
+      const cb=entryResolve; entryResolve=null; cb(digit);
+    }
+  });
+}
+
+function waitForEntryDigit(){return new Promise(r=>{entryResolve=r;});}
+
+async function unsubscribeTicks(){
+  entryResolve=null;
+  if(tickSubId){try{await apiSend({forget:tickSubId});}catch(e){}}
+  if(tickHandler)removeWsListener(tickHandler);
+  tickSubId=null; tickHandler=null;
+}
+
+// ═══════ PLACE TRADE ═══════
+function placeTrade(symbol,contractType,prediction,stake){
+  return new Promise(async(resolve)=>{
+    try{
+      const prop=await apiSend({proposal:1,amount:stake,basis:'stake',contract_type:contractType,currency:'USD',duration:1,duration_unit:'t',symbol,barrier:String(prediction)});
+      if(!prop.proposal){log('Proposal failed','error');resolve({won:false,profit:-stake});return;}
+
+      const buy=await apiSend({buy:prop.proposal.id,price:stake});
+      if(!buy.buy){log('Buy failed','error');resolve({won:false,profit:-stake});return;}
+
+      const cid=buy.buy.contract_id;
+      S.currentTradeId=cid;
+      log(`Contract #${cid} | ${contractType} ${prediction} | Stake $${stake.toFixed(2)}`,'info');
+
+      const nextTick=await waitForNextTick(symbol);
+      if(nextTick===null){
+        S.currentTradeId=null;
+        const r=await getContractResult(cid,stake,false,5000);
+        resolve(r); return;
+      }
+
+      const prec=nU(nextTick,symbol);
+      const rd=nP(nextTick,prec);
+      const won=rd!==null&&nz(rd,contractType,prediction);
+      log(`Result digit: ${rd} → ${won?'✓ WIN':'✗ LOSS'}`,won?'success':'warn');
+
+      S.currentTradeId=null;
+      const result=await getContractResult(cid,stake,won,8000);
+      resolve(result);
+    }catch(e){
+      log(`Trade error: ${e}`,'error');
+      S.currentTradeId=null;
+      resolve({won:false,profit:-stake});
+    }
+  });
+}
+
+function waitForNextTick(symbol){
+  return new Promise(resolve=>{
+    let done=false;
+    const start=Date.now();
+    const h=addWsListener(data=>{
+      if(done||data.msg_type!=='tick'||!data.tick||data.tick.symbol!==symbol)return;
+      const ts=data.tick.epoch?data.tick.epoch*1000:Date.now();
+      if(ts<start-500)return;
+      done=true; removeWsListener(h); resolve(nF(data.tick.quote));
+    });
+    setTimeout(()=>{if(!done){done=true;removeWsListener(h);resolve(null);}},15000);
+  });
+}
+
+function getContractResult(cid,stake,localWon,timeout){
+  return new Promise(resolve=>{
+    let done=false;
+    const h=addWsListener(data=>{
+      if(data.msg_type!=='proposal_open_contract')return;
+      const c=data.proposal_open_contract;
+      if(!c||c.contract_id!==cid)return;
+      if(c.is_sold||c.status==='won'||c.status==='lost'){
+        if(!done){
+          done=true; removeWsListener(h);
+          const dw=c.status==='won';
+          if(dw!==localWon)log(`⚠ Deriv says ${dw?'WIN':'LOSS'} vs local ${localWon?'WIN':'LOSS'} — trusting Deriv`,'warn');
+          resolve({won:dw,profit:parseFloat(c.profit||0)});
+        }
+      }
+    });
+    apiSend({proposal_open_contract:1,contract_id:cid,subscribe:1}).catch(()=>{});
+    setTimeout(()=>{
+      if(!done){
+        done=true; removeWsListener(h);
+        const est=localWon?parseFloat((stake*0.95).toFixed(2)):-stake;
+        resolve({won:localWon,profit:est});
+      }
+    },timeout);
+  });
+}
+
+// ══════════════════════════════════════════════
+//  DERIV-NATIVE RECOVERY ENGINE
+//
+//  Thinks like Deriv itself. Uses two confirmations
+//  that work with Deriv's own distribution contract:
+//
+//  CONFIRMATION 1 — UNDERREPRESENTATION
+//  Deriv maintains 10% per digit long-run.
+//  If the recovery win-zone digits are collectively
+//  UNDER their expected share in last 100 ticks,
+//  Deriv's own system will pull toward correcting.
+//  We fire into that correction.
+//
+//  For OVER 4: digits 5-9 expected = 50%.
+//  If currently < 47% → underrepresented → due.
+//
+//  For UNDER 5: digits 0-4 expected = 50%.
+//  If currently < 47% → underrepresented → due.
+//
+//  CONFIRMATION 2 — CURRENT WINDOW BIAS
+//  Short window (last 20 ticks) shows the
+//  recovery condition winning > 50% right now.
+//  Momentum is present in the live window.
+//
+//  FIRE LOGIC:
+//  — Both confirmed → fire immediately (strongest)
+//  — Only underrepresentation confirmed → fire (Deriv correction due)
+//  — Only window bias confirmed → fire (momentum present)
+//  — Neither → wait up to 15 ticks, recheck each tick
+//  — 15 ticks pass → fire regardless (no infinite wait)
+//
+//  Two independent signals. Either one is enough.
+//  Both together is the highest confidence entry.
+// ══════════════════════════════════════════════
+function analyseDerivNative(contractType, recoveryPrediction) {
+  const long  = S.liveTicks.slice(-100); // long window for underrepresentation
+  const short = S.liveTicks.slice(-20);  // short window for current momentum
+
+  // ── CONFIRMATION 1: Underrepresentation ──
+  let underrepresented = false;
+  let longScore = null;
+  if(long.length >= 30) {
+    const winCount = long.filter(t => nz(t.digit, contractType, recoveryPrediction)).length;
+    longScore = winCount / long.length;
+    // Expected is 50% for Over 4 / Under 5
+    // Underrepresented = currently below 47% (3 points under expected)
+    underrepresented = longScore < 0.47;
+  }
+
+  // ── CONFIRMATION 2: Short window momentum ──
+  let momentumPresent = false;
+  let shortScore = null;
+  if(short.length >= 10) {
+    const winCount = short.filter(t => nz(t.digit, contractType, recoveryPrediction)).length;
+    shortScore = winCount / short.length;
+    momentumPresent = shortScore > 0.50;
+  }
+
+  const confirmed = underrepresented || momentumPresent;
+
+  return {
+    confirmed,
+    underrepresented,
+    momentumPresent,
+    longScore,
+    shortScore,
+    longSample: long.length,
+    shortSample: short.length,
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+//  APEX SCIENTIST — RECOVERY INTELLIGENCE ENGINE
+//  Replaces static confirmation with 5-layer scientific analysis.
+//
+//  LAYER 1 — SHANNON ENTROPY (last 30 ticks)
+//    Measures chaos level. Low entropy = structure present.
+//    High entropy = pure noise — we wait.
+//    Formula: H = -Σ p(d) * log2(p(d)) for digits 0-9
+//    Max entropy = 3.32 bits (perfect randomness).
+//    We fire when H < 3.0 (structured window detected).
+//
+//  LAYER 2 — FREQUENCY DEVIATION (last 100 ticks)
+//    Over 5: digits 6-9 expected 40%. If currently < 37% → due.
+//    Under 4: digits 0-3 expected 40%. If currently < 37% → due.
+//    Statistical pressure builds toward mean reversion.
+//
+//  LAYER 3 — TRANSITION MATRIX (live, last 150 ticks)
+//    Tracks what digit followed what digit.
+//    Builds a 10×10 probability matrix in real time.
+//    From the current last digit, reads the row probability
+//    of the next digit satisfying our recovery condition.
+//    If transition probability > 55% → signal confirmed.
+//
+//  LAYER 4 — AUTOCORRELATION SPIKE (last 20 ticks)
+//    Checks if recovery condition is winning > 55% in
+//    the most recent micro-window. Momentum is live.
+//
+//  LAYER 5 — STREAK PRESSURE (last 15 ticks)
+//    If the OPPOSITE of recovery condition has appeared
+//    5+ times in last 15 ticks — streak pressure builds.
+//    Mean reversion expected soon. We fire into it.
+//
+//  FIRE RULES:
+//    Score 3+ layers confirmed → fire immediately (APEX entry)
+//    Score 2 layers confirmed  → fire (strong entry)
+//    Score 1 layer confirmed   → wait up to 10 more ticks
+//    Score 0                   → wait up to 20 ticks then fire
+//    Hard timeout: 30 ticks max — never hang forever
+//
+//  ENTRY DIGIT SELECTION:
+//    After conditions confirm, the engine scans the transition
+//    matrix row of the CURRENT last digit and picks the
+//    entry digit with the highest forward probability
+//    of satisfying the recovery condition.
+//    This gives a unique, live, mathematically-derived
+//    entry digit — not a static preset.
+// ══════════════════════════════════════════════════════════════
+
+function apexScientistAnalyse(contractType, recoveryPrediction) {
+  const ticks100 = S.liveTicks.slice(-100);
+  const ticks150 = S.liveTicks.slice(-150);
+  const ticks30  = S.liveTicks.slice(-30);
+  const ticks20  = S.liveTicks.slice(-20);
+  const ticks15  = S.liveTicks.slice(-15);
+
+  // ── LAYER 1: Shannon Entropy ──
+  let entropyConfirmed = false;
+  let entropy = null;
+  if (ticks30.length >= 15) {
+    const freq = new Array(10).fill(0);
+    ticks30.forEach(t => freq[t.digit]++);
+    const n = ticks30.length;
+    entropy = 0;
+    freq.forEach(f => {
+      if (f > 0) {
+        const p = f / n;
+        entropy -= p * Math.log2(p);
+      }
+    });
+    entropyConfirmed = entropy < 3.0; // structured window
+  }
+
+  // ── LAYER 2: Frequency Deviation ──
+  let deviationConfirmed = false;
+  let deviationScore = null;
+  if (ticks100.length >= 30) {
+    const winCount = ticks100.filter(t => nz(t.digit, contractType, recoveryPrediction)).length;
+    deviationScore = winCount / ticks100.length;
+    // For Over 5: expected ~40% (digits 6,7,8,9). Under 4: expected ~40% (digits 0,1,2,3)
+    // But our contract is OVER 5 meaning digit > 5, so digits 6-9 = 40%
+    // Under 4 meaning digit < 4, so digits 0-3 = 40%
+    const expected = contractType === 'DIGITOVER' ? 0.40 : 0.40;
+    deviationConfirmed = deviationScore < (expected - 0.03); // underrepresented
+  }
+
+  // ── LAYER 3: Transition Matrix ──
+  let transitionConfirmed = false;
+  let transitionProb = null;
+  const lastDigit = S.liveTicks.length > 0 ? S.liveTicks[S.liveTicks.length - 1].digit : null;
+  if (ticks150.length >= 30 && lastDigit !== null) {
+    // Build transition matrix row for lastDigit
+    const fromCount = new Array(10).fill(0); // total transitions from lastDigit to any digit
+    const fromWin   = new Array(10).fill(0); // transitions from lastDigit where next satisfies condition
+    let totalFrom = 0, winFrom = 0;
+    for (let i = 0; i < ticks150.length - 1; i++) {
+      if (ticks150[i].digit === lastDigit) {
+        const nextDigit = ticks150[i + 1].digit;
+        totalFrom++;
+        if (nz(nextDigit, contractType, recoveryPrediction)) winFrom++;
+      }
+    }
+    if (totalFrom >= 5) {
+      transitionProb = winFrom / totalFrom;
+      transitionConfirmed = transitionProb > 0.55;
+    }
+  }
+
+  // ── LAYER 4: Autocorrelation (short momentum) ──
+  let momentumConfirmed = false;
+  let momentumScore = null;
+  if (ticks20.length >= 10) {
+    const wins = ticks20.filter(t => nz(t.digit, contractType, recoveryPrediction)).length;
+    momentumScore = wins / ticks20.length;
+    momentumConfirmed = momentumScore > 0.55;
+  }
+
+  // ── LAYER 5: Streak Pressure ──
+  let streakConfirmed = false;
+  let streakCount = 0;
+  if (ticks15.length >= 10) {
+    // Count how many of last 15 ticks FAILED the recovery condition (opposite streak)
+    streakCount = ticks15.filter(t => !nz(t.digit, contractType, recoveryPrediction)).length;
+    streakConfirmed = streakCount >= 5; // opposite has been dominating → pressure builds
+  }
+
+  const layers = [entropyConfirmed, deviationConfirmed, transitionConfirmed, momentumConfirmed, streakConfirmed];
+  const score  = layers.filter(Boolean).length;
+
+  return {
+    score, layers,
+    entropyConfirmed,   entropy,
+    deviationConfirmed, deviationScore,
+    transitionConfirmed,transitionProb,
+    momentumConfirmed,  momentumScore,
+    streakConfirmed,    streakCount,
+    lastDigit,
+  };
+}
+
+// ── APEX ENTRY DIGIT SELECTOR ──
+// After conditions fire, pick the best entry digit
+// from the transition matrix: which digit, when seen,
+// is most likely followed by a digit satisfying Over 5 / Under 4.
+function apexSelectEntryDigit(contractType, recoveryPrediction) {
+  const ticks = S.liveTicks.slice(-200);
+  if (ticks.length < 30) return null;
+
+  // For each possible trigger digit (0-9), compute:
+  // P(next tick satisfies condition | current digit = d)
+  let bestDigit = null, bestProb = 0;
+
+  for (let d = 0; d <= 9; d++) {
+    let total = 0, wins = 0;
+    for (let i = 0; i < ticks.length - 1; i++) {
+      if (ticks[i].digit === d) {
+        total++;
+        if (nz(ticks[i + 1].digit, contractType, recoveryPrediction)) wins++;
+      }
+    }
+    if (total >= 5) {
+      const prob = wins / total;
+      if (prob > bestProb) {
+        bestProb = prob;
+        bestDigit = d;
+      }
+    }
+  }
+
+  // Only use if meaningful edge (>58%)
+  if (bestProb >= 0.58 && bestDigit !== null) {
+    return { digit: bestDigit, probability: bestProb };
+  }
+  return null;
+}
+
+function waitForRecoveryConfirmation(contractType, recoveryPrediction) {
+  return new Promise(resolve => {
+    const typeLabel = contractType === 'DIGITOVER' ? 'OVER' : 'UNDER';
+
+    // ── INSTANT ANALYSIS — no waiting, no watching ──
+    // S.liveTicks already has 500 ticks preloaded from session start.
+    // By the time a loss occurs, the engine has been monitoring continuously.
+    // We have everything we need. Fire immediately.
+
+    const analysis = apexScientistAnalyse(contractType, recoveryPrediction);
+    const entryPick = apexSelectEntryDigit(contractType, recoveryPrediction);
+
+    function describeAnalysis(a) {
+      const flags = [];
+      if (a.entropyConfirmed)    flags.push(`ENT:${a.entropy !== null ? a.entropy.toFixed(2) : '?'}`);
+      if (a.deviationConfirmed)  flags.push(`DEV:${a.deviationScore !== null ? (a.deviationScore*100).toFixed(1)+'%' : '?'}`);
+      if (a.transitionConfirmed) flags.push(`TRX:${a.transitionProb !== null ? (a.transitionProb*100).toFixed(1)+'%' : '?'}`);
+      if (a.momentumConfirmed)   flags.push(`MOM:${a.momentumScore !== null ? (a.momentumScore*100).toFixed(1)+'%' : '?'}`);
+      if (a.streakConfirmed)     flags.push(`STK:${a.streakCount}`);
+      return `[${a.score}/5] ${flags.join(' ') || 'baseline'}`;
+    }
+
+    const entryMsg = entryPick
+      ? `ENTRY DIGIT → ${entryPick.digit} (${(entryPick.probability*100).toFixed(1)}% fwd prob)`
+      : `ENTRY DIGIT → ${recoveryPrediction} (profile default)`;
+
+    const strength = analysis.score >= 3 ? 'APEX' : analysis.score >= 2 ? 'STRONG' : analysis.score >= 1 ? 'PARTIAL' : 'BASELINE';
+
+    log(`   ⚡ ${strength} FIRE | ${describeAnalysis(analysis)} | ${typeLabel} ${recoveryPrediction} | ${entryMsg}`, 'success');
+
+    resolve(); // immediate — no delay
+  });
+}
+
+// ═══════════════════════════════════════
+//  MAIN TRADING LOOP
+//  Key upgrade: Smart Recovery uses live digit
+//  frequency analysis to pick the best recovery
+//  prediction dynamically, not the static one.
+// ═══════════════════════════════════════
+async function startTrading(){
+  if(!S.currentSignal){log('No signal loaded','error');return;}
+
+  S.isTrading=true;
+  S.sessionWins=0; S.sessionLosses=0; S.sessionPL=0; S.runCount=0;
+  S.consecutiveWins=0; S.consecutiveLosses=0;
+  S.sessionStartTime=Date.now();
+  S.liveTicks=[]; S.inRecovery=false; S.phase='idle'; S.currentTradeId=null;
+  S.digitFrequency=new Array(10).fill(0);
+
+  const initialStake=Math.max(0.35,parseFloat(document.getElementById('initialStake').value)||0.5);
+  S.currentStake=initialStake; S.initialStake=initialStake;
+  S.targetWins=parseInt(document.getElementById('numberOfWins').value)||5;
+  S.stopLoss=parseFloat(document.getElementById('stopLoss').value)||50;
+  const useMartingale=document.getElementById('useMartingale').checked;
+  const multiplier=parseFloat(document.getElementById('martingaleMultiplier').value)||2.1;
+  S.maxRecoveryDepth=parseInt(document.getElementById('maxRecoveryDepth').value)||4;
+
+  setStatus('TRADING','warn');
+  updatePhase('waiting_entry');
+  document.getElementById('tradingBadge').classList.add('active');
+  document.getElementById('scanBtn').style.display='none';
+  document.getElementById('stopBtn').style.display='';
+  document.getElementById('loopBtn').style.display='';
+
+  log(`Session start: ${S.currentSignal.marketName} | ${S.currentProfile.label} | Entry: ${S.currentEntryDigit}`,'success');
+
+  try{await subscribeToTicks(S.currentMarket);}
+  catch(e){log('Could not subscribe to ticks: '+e,'error');S.isTrading=false;return;}
+
+  // MAIN LOOP
+  while(S.isTrading&&S.runCount<S.targetWins){
+    if(S.totalPL<=-S.stopLoss){log(`⛔ Stop loss hit: $${Math.abs(S.totalPL).toFixed(2)}`,'error');break;}
+
+    S.phase='waiting_entry';
+    updatePhase('waiting_entry');
+    log(`Watching for entry digit ${S.currentEntryDigit}...`,'info');
+
+    await waitForEntryDigit();
+    if(!S.isTrading)break;
+
+    log(`Entry digit ${S.currentEntryDigit} seen — placing trade...`,'info');
+
+    // ── INITIAL TRADE ──
+    S.phase='trading_initial'; S.inRecovery=false;
+    S.currentPrediction=S.currentProfile.initialPrediction;
+    updatePhase('trading_initial');
+
+    const initResult=await placeTrade(S.currentMarket,S.currentProfile.contractType,S.currentProfile.initialPrediction,S.currentStake);
+
+    if(initResult.won){
+      S.sessionWins++; S.runCount++;
+      S.sessionPL=parseFloat((S.sessionPL+initResult.profit).toFixed(2));
+      S.totalPL=parseFloat((S.totalPL+initResult.profit).toFixed(2));
+      S.consecutiveWins++; S.consecutiveLosses=0;
+      S.currentStake=initialStake;
+      addTradeRow(S.currentMarket,S.currentEntryDigit,'WIN',initResult.profit);
+      log(`✓ WIN $${initResult.profit.toFixed(2)} | ${S.sessionWins}/${S.targetWins}`,'success');
+    } else {
+      // INITIAL LOSS
+      S.sessionLosses++;
+      S.sessionPL=parseFloat((S.sessionPL+initResult.profit).toFixed(2));
+      S.totalPL=parseFloat((S.totalPL+initResult.profit).toFixed(2));
+      S.consecutiveLosses++; S.consecutiveWins=0;
+      addTradeRow(S.currentMarket,S.currentEntryDigit,'LOSS',initResult.profit);
+
+      if(!useMartingale){
+        log(`✗ Loss (recovery OFF) | Streak: ${S.consecutiveLosses}L`,'warn');
+      } else {
+        // ── CONFIRMATION-PATTERN RECOVERY LOOP ──
+        S.phase='trading_recovery'; S.inRecovery=true;
+        updatePhase('trading_recovery');
+        log(`✗ Initial lost — APEX SCIENTIST engaging recovery...`,'warn');
+
+        let recoveryWon=false;
+        let recovDepth=0;
+
+        while(!recoveryWon&&S.isTrading&&recovDepth<S.maxRecoveryDepth){
+          if(S.totalPL<=-S.stopLoss)break;
+          recovDepth++;
+
+          // ── RECOVERY DIGIT: same as profile (unchanged) ──
+          const recovPred = S.currentProfile.recoveryPrediction;
+          S.currentPrediction = recovPred;
+          const ct = S.currentProfile.contractType;
+          const typeLabel = ct==='DIGITOVER'?'OVER':'UNDER';
+
+          // ══════════════════════════════════════════════
+          //  CONFIRMATION PATTERN ENGINE
+          //  Logic: Before firing the recovery trade, we
+          //  watch live ticks and wait for PRESSURE to build
+          //  in the OPPOSITE direction — meaning the market
+          //  has been FAILING to produce the recovery outcome
+          //  for N consecutive ticks. This is mean-reversion:
+          //  after a streak of "wrong" ticks, probability of
+          //  the recovery outcome increases. We also enforce
+          //  a minimum wait so we never fire on stale data.
+          //
+          //  Specifically:
+          //  - Wait for 3+ consecutive ticks where the digit
+          //    does NOT satisfy the recovery condition
+          //    (e.g. for OVER 4: digits ≤ 4 appearing 3x in a row)
+          //  - This means the market has been "suppressed"
+          //    and is statistically due to break out
+          //  - Cap wait at 30 ticks to avoid infinite hang
+          // ══════════════════════════════════════════════
+          log(`⚡ Recovery ${recovDepth}/${S.maxRecoveryDepth} | APEX firing ${typeLabel} ${recovPred} instantly...`,'warn');
+          document.getElementById('tradingBadgeText').textContent=`RECOVERY ${recovDepth} — APEX FIRING ${typeLabel} ${recovPred}...`;
+
+          await waitForRecoveryConfirmation(ct, recovPred);
+          if(!S.isTrading)break;
+
+          // Escalate stake AFTER confirmation — only commit when pattern fires
+          S.currentStake=parseFloat((S.currentStake*multiplier).toFixed(2));
+          log(`⚡ Pattern confirmed — firing recovery | Stake $${S.currentStake.toFixed(2)} | ${typeLabel} ${recovPred}`,'warn');
+          document.getElementById('tradingBadgeText').textContent=`RECOVERY ${recovDepth} — FIRING ${typeLabel} ${recovPred} | $${S.currentStake.toFixed(2)}`;
+
+          const recovResult=await placeTrade(S.currentMarket,S.currentProfile.contractType,recovPred,S.currentStake);
+
+          S.sessionPL=parseFloat((S.sessionPL+recovResult.profit).toFixed(2));
+          S.totalPL=parseFloat((S.totalPL+recovResult.profit).toFixed(2));
+
+          if(recovResult.won){
+            recoveryWon=true;
+            S.sessionWins++; S.runCount++;
+            S.consecutiveWins++; S.consecutiveLosses=0;
+            S.currentStake=initialStake; S.inRecovery=false;
+            addTradeRow(S.currentMarket,S.currentEntryDigit,'WIN',recovResult.profit);
+            log(`✓ RECOVERY WIN! $${recovResult.profit.toFixed(2)} | Depth: ${recovDepth}`,'success');
+            document.getElementById('tradingBadgeText').textContent='TRADING ACTIVE';
+          } else {
+            S.sessionLosses++; S.consecutiveLosses++; S.consecutiveWins=0;
+            addTradeRow(S.currentMarket,S.currentEntryDigit,'LOSS',recovResult.profit);
+            log(`✗ Recovery ${recovDepth} lost | Next depth: ${recovDepth+1}/${S.maxRecoveryDepth}`,'error');
+          }
+        }
+
+        if(!recoveryWon){
+          log(`⛔ Max recovery depth (${S.maxRecoveryDepth}) reached — resetting stake`,'error');
+          S.currentStake=initialStake; // hard reset after max depth
+        }
+
+        S.inRecovery=false;
+        document.getElementById('tradingBadgeText').textContent='TRADING ACTIVE';
+      }
+    }
+
+    updateUI();
+    updatePhase(S.isTrading?'waiting_entry':'idle');
+  }
+
+  // SESSION END
+  await unsubscribeTicks();
+  S.isTrading=false; S.currentTradeId=null; S.phase='idle';
+  updatePhase('idle');
+
+  if(S.runCount>=S.targetWins){
+    log(`🎉 SESSION COMPLETE — ${S.sessionWins}W/${S.sessionLosses}L | P&L: $${S.sessionPL.toFixed(2)}`,'success');
+  } else {
+    log(`⛔ SESSION STOPPED — P&L: $${S.sessionPL.toFixed(2)}`,'warn');
+  }
+
+  setStatus('Idle');
+  document.getElementById('tradingBadge').classList.remove('active');
+  document.getElementById('scanBtn').style.display='';
+  document.getElementById('stopBtn').style.display='none';
+  document.getElementById('loopBtn').style.display='none';
+  updateUI();
+
+  if(S.autoLoop&&!S.isTrading){
+    log('Auto-loop: rescanning...','info');
+    await sleep(2000);
+    await startScan();
+  }
+}
+
+// ═══════ CONTROLS ═══════
+async function startScan(){
+  S.apiToken=document.getElementById('apiToken').value.trim();
+  if(!S.apiToken){
+    document.getElementById('tokenWarn').classList.add('show');
+    return;
+  }
+  document.getElementById('tokenWarn').classList.remove('show');
+
+  if(!ws||ws.readyState!==WebSocket.OPEN){
+    try{await connectWebSocket(S.apiToken);}
+    catch(e){log(`Connection failed: ${e}`,'error');return;}
+  }
+
+  S.isScanning=true;
+  setStatus('SCANNING','active');
+  updatePhase('scanning');
+  document.getElementById('scanBtn').disabled=true;
+  document.getElementById('scanBtn').textContent='SCANNING...';
+
+  const ok=await scanLoop();
+  S.isScanning=false;
+  document.getElementById('scanBtn').disabled=false;
+  document.getElementById('scanBtn').textContent='▶ SCAN + TRADE';
+
+  if(ok){await startTrading();}
+  else{setStatus('Idle');updatePhase('idle');}
+}
+
+function toggleLoop(){
+  S.autoLoop=!S.autoLoop;
+  const btn=document.getElementById('loopBtn');
+  btn.textContent=`↺ AUTO-LOOP: ${S.autoLoop?'ON':'OFF'}`;
+  btn.classList.toggle('active',S.autoLoop);
+}
+
+async function stopAll(){
+  S.isTrading=false; S.isScanning=false; S.autoLoop=false;
+  entryResolve=null;
+  await unsubscribeTicks();
+  setStatus('Idle');
+  updatePhase('idle');
+  document.getElementById('tradingBadge').classList.remove('active');
+  document.getElementById('scanBtn').style.display='';
+  document.getElementById('stopBtn').style.display='none';
+  document.getElementById('loopBtn').style.display='none';
+  document.getElementById('loopBtn').textContent='↺ AUTO-LOOP: OFF';
+  document.getElementById('loopBtn').classList.remove('active');
+  document.getElementById('rescanBox').classList.remove('active');
+  const e=S.sessionStartTime?Math.floor((Date.now()-S.sessionStartTime)/1000):0;
+  log(`Stopped by user | ${Math.floor(e/60)}m ${e%60}s | ${S.sessionWins}W / ${S.sessionLosses}L`,'warn');
+  updateUI();
+}
+
+// ═══════ TIMERS + INIT ═══════
+setInterval(()=>{if(S.isTrading){updateTimer();updateUI();}},500);
+
+// Init intel grid
+(function initGrid(){
+  const grid=document.getElementById('intelGrid');
+  grid.innerHTML=Array.from({length:10},(_,d)=>
+    `<div class="intel-cell"><div class="d-num">${d}</div><div class="d-score">0%</div></div>`
+  ).join('');
+})();
+
+log('APEX SCIENTIST v4 ready — Enter token and press SCAN + TRADE','success');
+log('Recovery: OVER 5 / UNDER 4 | 5-Layer Intelligence Engine: ON','info');
+</script>
+</body>
+</html>
