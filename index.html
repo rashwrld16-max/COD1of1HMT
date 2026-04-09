@@ -448,7 +448,7 @@
   </div>
   <div class="settings-group">
     <label>MARTINGALE ×</label>
-    <input type="number" id="martMulti" value="2" step="0.1" min="1.1" />
+    <input type="number" id="martMulti" value="2.1" step="0.1" min="1.1" />
   </div>
   <div class="settings-group">
     <label>TP $</label>
@@ -615,9 +615,21 @@ let accountBalance = null;
 let sessionPnl = 0;
 
 const stratState = {
-  s4: { active:true, wins:0, losses:0, pnl:0, martStake:null, bestTrade:null, worstTrade:null },
+  s4: { active:true, wins:0, losses:0, pnl:0, bestTrade:null, worstTrade:null },
 };
-
+// martStake lives per-market: a loss on V10 only martingales the next V10 trade, not any other market.
+const martState = {};
+function getMartStake(symbol, stratKey) {
+  if(!martState[symbol]) martState[symbol] = { s4:null };
+  return martState[symbol][stratKey];
+}
+function setMartStake(symbol, stratKey, val) {
+  if(!martState[symbol]) martState[symbol] = { s4:null };
+  martState[symbol][stratKey] = val;
+}
+function clearMartStake(symbol, stratKey) {
+  if(martState[symbol]) martState[symbol][stratKey] = null;
+}
 const detectedDecimals = {};
 
 function getDecimals(symbol) {
@@ -958,21 +970,16 @@ function onTick(symbol, quote) {
 // ============================================================
 const pendingTrades = {};
 
-function getStake(stratKey) {
+function getStake(symbol, stratKey) {
   const base = parseFloat(document.getElementById('baseStake').value) || 0.35;
-  const multi = parseFloat(document.getElementById('martMulti').value) || 2.1;
-  const ss = stratState[stratKey];
-  if(ss.martStake !== null) {
-    const s = ss.martStake;
-    ss.martStake = null;
-    return s;
-  }
+  const pending = getMartStake(symbol, stratKey);
+  if(pending !== null) { clearMartStake(symbol, stratKey); return pending; }
   return base;
 }
 
 function placeTrade(symbol, stratKey, contractType, ticks) {
   if(!apiToken || !tokenWS || tokenWS.readyState !== 1) return;
-  const stake = getStake(stratKey);
+  const stake = getStake(symbol, stratKey);
 
   // S4 uses DIGITUNDER barrier=6 (under 6) or DIGITOVER barrier=3 (over 3)
   let contractTypeStr, barrier;
@@ -1046,7 +1053,7 @@ function onContractUpdate(data) {
       ss.wins++;
       ss.pnl += pnl;
       sessionPnl += pnl;
-      ss.martStake = null;
+      clearMartStake(entry.symbol, entry.stratKey);
       if(ss.bestTrade === null || pnl > ss.bestTrade) ss.bestTrade = pnl;
       notify(`✓ S4 WIN +$${pnl.toFixed(2)} — ${entry.symbol}`, 'win');
     } else {
@@ -1055,8 +1062,8 @@ function onContractUpdate(data) {
       sessionPnl += pnl;
       if(ss.worstTrade === null || pnl < ss.worstTrade) ss.worstTrade = pnl;
       const multi = parseFloat(document.getElementById('martMulti').value) || 2.1;
-      ss.martStake = Math.abs(pnl) * multi;
-      notify(`✗ S4 LOSS $${pnl.toFixed(2)} — ${entry.symbol} → MART ×${multi}`, 'loss');
+      setMartStake(entry.symbol, entry.stratKey, Math.abs(pnl) * multi);
+      notify(`✗ S4 LOSS $${pnl.toFixed(2)} — ${entry.symbol} → MART ×${multi} (this market only)`, 'loss');
     }
 
     const tp = parseFloat(document.getElementById('tpVal').value) || 5;
@@ -1355,8 +1362,10 @@ function updateStratToggle(sk) {
 
 function resetStrategy(sk) {
   const ss = stratState[sk];
-  ss.wins = 0; ss.losses = 0; ss.pnl = 0; ss.martStake = null;
+  ss.wins = 0; ss.losses = 0; ss.pnl = 0;
   ss.bestTrade = null; ss.worstTrade = null;
+  // Clear all per-market martingale stakes for this strategy
+  Object.keys(martState).forEach(sym => { if(martState[sym]) martState[sym][sk] = null; });
   // Reset all market gates
   Object.values(marketState).forEach(ms => {
     ms.s4.gateArmed = false;
