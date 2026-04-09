@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HMT GHOST — S4 PRESSURE GATE</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap');
+
+  :root {
+    --bg: #010308;
+    --bg2: #050d1a;
+    --bg3: #0a1628;
+    --panel: #0d1f35;
+    --border: #0e3460;
+    --accent: #00f0ff;
+    --accent2: #0070ff;
+    --green: #00ff88;
+    --red: #ff2d55;
+    --blue: #4da6ff;
+    --yellow: #ffd700;
+    --orange: #ff6b00;
+    --text: #c8e0ff;
+    --dim: #3a5a8a;
+    --s4: #ff44cc;
+    --win: #00ff88;
+    --loss: #ff2d55;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    font-size: 13px;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content:'';
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,240,255,0.015) 2px, rgba(0,240,255,0.015) 4px);
+    pointer-events:none; z-index:9999;
+  }
+
+  .header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 10px 20px;
+    background: linear-gradient(90deg, #010308, #0a1628, #010308);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top:0; z-index:100;
+  }
+  .logo {
+    font-family: 'Orbitron', monospace;
+    font-size: 22px; font-weight:900;
+    color: var(--s4);
+    text-shadow: 0 0 20px var(--s4), 0 0 40px rgba(255,68,204,0.3);
+    letter-spacing: 4px;
+  }
+  .logo span { color: var(--text); font-size:12px; display:block; letter-spacing:6px; font-weight:400; }
+  .header-right { display:flex; gap:12px; align-items:center; }
+  .conn-status { display:flex; align-items:center; gap:6px; font-family:'Share Tech Mono'; font-size:11px; }
+  .conn-dot { width:8px; height:8px; border-radius:50%; background:var(--dim); transition:all 0.3s; }
+  .conn-dot.live { background:var(--green); box-shadow:0 0 8px var(--green); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  .token-bar {
+    display:flex; align-items:center; gap:10px;
+    padding: 8px 20px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+  }
+  .token-bar label { font-family:'Share Tech Mono'; font-size:11px; color:var(--dim); white-space:nowrap; }
+  .token-bar input {
+    flex:1; max-width:320px;
+    background: var(--bg3); border:1px solid var(--border); color:var(--accent);
+    font-family:'Share Tech Mono'; font-size:12px; padding:5px 10px; border-radius:3px;
+    outline:none;
+  }
+  .token-bar input:focus { border-color:var(--accent); }
+  .btn {
+    padding: 5px 14px; border:none; cursor:pointer; border-radius:3px;
+    font-family:'Orbitron'; font-size:10px; letter-spacing:1px; font-weight:700;
+    transition: all 0.2s;
+  }
+  .btn-connect { background:var(--accent2); color:#fff; }
+  .btn-connect:hover { background:var(--accent); color:#000; box-shadow:0 0 12px var(--accent); }
+  .btn-sm { padding:4px 10px; font-size:9px; }
+  .btn-green { background: rgba(0,255,136,0.15); color:var(--green); border:1px solid var(--green); }
+  .btn-red { background: rgba(255,45,85,0.15); color:var(--red); border:1px solid var(--red); }
+  .btn-gray { background: rgba(60,90,138,0.3); color:var(--dim); border:1px solid var(--dim); }
+
+  .settings-bar {
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    padding: 8px 20px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+  }
+  .settings-group { display:flex; align-items:center; gap:8px; }
+  .settings-group label { font-family:'Share Tech Mono'; font-size:10px; color:var(--dim); }
+  .settings-group input[type=number] {
+    width:70px; background:var(--bg3); border:1px solid var(--border);
+    color:var(--accent); font-family:'Share Tech Mono'; font-size:11px;
+    padding:3px 6px; border-radius:3px; outline:none;
+  }
+  .toggle-group { display:flex; gap:6px; }
+  .toggle-btn {
+    padding:3px 10px; border-radius:3px; cursor:pointer; font-family:'Share Tech Mono'; font-size:10px;
+    border:1px solid var(--border); background:transparent; color:var(--dim); transition:all 0.2s;
+  }
+  .toggle-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(0,240,255,0.08); }
+
+  .main { display:flex; height:calc(100vh - 160px); }
+
+  .scanner-panel {
+    width: 280px; min-width:260px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display:flex; flex-direction:column;
+    overflow:hidden;
+  }
+  .panel-title {
+    padding: 8px 12px;
+    font-family:'Orbitron'; font-size:10px; letter-spacing:2px; color:var(--accent2);
+    border-bottom:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .market-list { flex:1; overflow-y:auto; }
+  .market-list::-webkit-scrollbar { width:4px; }
+  .market-list::-webkit-scrollbar-track { background:var(--bg); }
+  .market-list::-webkit-scrollbar-thumb { background:var(--border); }
+
+  .market-row {
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(14,52,96,0.5);
+    cursor:pointer; transition:background 0.15s;
+    position:relative;
+  }
+  .market-row:hover { background: rgba(0,240,255,0.04); }
+  .market-row.has-setup { background: rgba(255,68,204,0.06); border-left:2px solid var(--s4); }
+  .market-row.selected { background: rgba(0,112,255,0.1); border-left:2px solid var(--accent2); }
+
+  .market-name { font-family:'Orbitron'; font-size:9px; color:var(--text); letter-spacing:1px; }
+  .market-bars { display:flex; gap:2px; margin-top:4px; }
+  .digit-cell {
+    width:22px; height:22px; border-radius:2px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Share Tech Mono'; font-size:9px; font-weight:700;
+    border:1px solid transparent; transition:all 0.2s;
+  }
+  .digit-cell.green-bar { background:rgba(0,255,136,0.2); color:var(--green); border-color:rgba(0,255,136,0.4); }
+  .digit-cell.blue-bar { background:rgba(77,166,255,0.15); color:var(--blue); border-color:rgba(77,166,255,0.3); }
+  .digit-cell.red-bar { background:rgba(255,45,85,0.2); color:var(--red); border-color:rgba(255,45,85,0.4); }
+  .digit-cell.neutral { background:rgba(10,22,40,0.8); color:var(--dim); }
+
+  .market-signals { display:flex; gap:4px; margin-top:4px; }
+  .sig-badge {
+    padding:1px 5px; border-radius:2px; font-size:8px; font-family:'Share Tech Mono';
+    font-weight:700; letter-spacing:1px;
+  }
+  .sig-s4 { background:rgba(255,68,204,0.15); color:var(--s4); border:1px solid rgba(255,68,204,0.3); }
+
+  .center-panel { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+  .strategy-tabs {
+    display:flex; border-bottom:1px solid var(--border);
+    background:var(--bg2);
+  }
+  .strat-tab {
+    flex:1; padding:10px 8px; text-align:center; cursor:pointer;
+    font-family:'Orbitron'; font-size:9px; letter-spacing:1px;
+    border-right:1px solid var(--border); color:var(--dim);
+    transition:all 0.2s; position:relative;
+  }
+  .strat-tab:last-child { border-right:none; }
+  .strat-tab.active { color:var(--s4); background:rgba(255,68,204,0.05); }
+  .strat-tab.active::after {
+    content:''; position:absolute; bottom:0; left:0; right:0; height:2px;
+    background:var(--s4);
+  }
+  .strat-tab .tab-pnl { font-size:10px; font-family:'Share Tech Mono'; margin-top:2px; }
+  .strat-tab .tab-toggle {
+    display:inline-block; width:8px; height:8px; border-radius:50%;
+    background:var(--s4); margin-left:5px; vertical-align:middle;
+  }
+  .strat-tab .tab-toggle.off { background:var(--dim); }
+
+  .strategy-content { flex:1; overflow-y:auto; padding:12px; }
+  .strategy-content::-webkit-scrollbar { width:4px; }
+  .strategy-content::-webkit-scrollbar-thumb { background:var(--border); }
+
+  .strat-view { display:none; }
+  .strat-view.active { display:block; }
+
+  .strat-header {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:12px;
+  }
+  .strat-name { font-family:'Orbitron'; font-size:14px; font-weight:700; }
+  .strat-controls { display:flex; gap:8px; align-items:center; }
+
+  .stats-row { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:12px; }
+  .stat-box {
+    background:var(--panel); border:1px solid var(--border); border-radius:4px;
+    padding:8px 10px; text-align:center;
+  }
+  .stat-box .val { font-family:'Share Tech Mono'; font-size:16px; font-weight:700; }
+  .stat-box .lbl { font-size:9px; color:var(--dim); margin-top:2px; letter-spacing:1px; }
+  .val.green { color:var(--green); }
+  .val.red { color:var(--red); }
+  .val.yellow { color:var(--yellow); }
+  .val.blue { color:var(--blue); }
+  .val.pink { color:var(--s4); }
+
+  .section-title { font-family:'Orbitron'; font-size:9px; letter-spacing:2px; color:var(--accent2); margin-bottom:8px; }
+
+  .setups-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:8px; margin-bottom:12px; }
+  .setup-card {
+    background:var(--panel); border:1px solid var(--border); border-radius:4px; padding:10px;
+    position:relative; overflow:hidden;
+  }
+  .setup-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  }
+  .setup-card.s4::before { background:var(--s4); }
+  .setup-card.waiting::before { background:var(--dim); }
+
+  .setup-market { font-family:'Orbitron'; font-size:9px; color:var(--text); letter-spacing:1px; }
+  .setup-contract { font-size:11px; font-weight:600; margin:4px 0; }
+  .setup-contract.over { color:var(--green); }
+  .setup-contract.under { color:var(--red); }
+  .setup-info { font-family:'Share Tech Mono'; font-size:10px; color:var(--dim); }
+
+  /* S4 GATE STATUS */
+  .gate-status {
+    margin-top:6px; padding:4px 8px; border-radius:3px;
+    font-family:'Share Tech Mono'; font-size:10px;
+    background:rgba(255,68,204,0.08); border:1px solid rgba(255,68,204,0.25);
+    color:var(--s4);
+  }
+  .gate-status.armed {
+    background:rgba(255,215,0,0.1); border-color:rgba(255,215,0,0.4); color:var(--yellow);
+    animation: glow 1s infinite;
+  }
+  .gate-status.ready {
+    background:rgba(0,255,136,0.1); border-color:rgba(0,255,136,0.4); color:var(--green);
+  }
+  @keyframes glow { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+  /* TRADE LOG */
+  .trade-log { max-height:280px; overflow-y:auto; }
+  .trade-log::-webkit-scrollbar { width:4px; }
+  .trade-log::-webkit-scrollbar-thumb { background:var(--border); }
+
+  .trade-row {
+    display:grid; grid-template-columns: 90px 70px 65px 50px 60px 60px 70px 1fr;
+    gap:4px; padding:5px 8px; border-bottom:1px solid rgba(14,52,96,0.4);
+    font-family:'Share Tech Mono'; font-size:10px; align-items:center;
+  }
+  .trade-row.header { color:var(--dim); font-size:9px; background:var(--bg3); position:sticky; top:0; }
+  .trade-row.win { border-left:2px solid var(--win); }
+  .trade-row.loss { border-left:2px solid var(--loss); }
+  .trade-row.pending { border-left:2px solid var(--yellow); opacity:0.8; }
+  .badge { padding:1px 6px; border-radius:2px; font-size:9px; }
+  .badge.win { background:rgba(0,255,136,0.2); color:var(--win); }
+  .badge.loss { background:rgba(255,45,85,0.2); color:var(--loss); }
+  .badge.pending { background:rgba(255,215,0,0.2); color:var(--yellow); }
+
+  /* DIGIT FREQUENCY DISPLAY */
+  .freq-display {
+    display:flex; gap:3px; margin-bottom:12px; flex-wrap:wrap;
+  }
+  .freq-digit {
+    flex:1; min-width:40px; background:var(--panel); border:1px solid var(--border);
+    border-radius:3px; padding:6px 4px; text-align:center;
+    transition:all 0.3s;
+  }
+  .freq-digit .d-num { font-family:'Orbitron'; font-size:11px; font-weight:700; }
+  .freq-digit .d-pct { font-family:'Share Tech Mono'; font-size:9px; color:var(--dim); margin-top:2px; }
+  .freq-digit .d-bar { height:30px; display:flex; align-items:flex-end; justify-content:center; margin:4px 0; }
+  .freq-digit .d-bar-fill { width:70%; border-radius:1px 1px 0 0; transition:height 0.4s; }
+  .freq-digit.green-bar { border-color:rgba(0,255,136,0.5); background:rgba(0,255,136,0.06); }
+  .freq-digit.green-bar .d-num { color:var(--green); }
+  .freq-digit.green-bar .d-bar-fill { background:var(--green); }
+  .freq-digit.blue-bar { border-color:rgba(77,166,255,0.4); background:rgba(77,166,255,0.05); }
+  .freq-digit.blue-bar .d-num { color:var(--blue); }
+  .freq-digit.blue-bar .d-bar-fill { background:var(--blue); }
+  .freq-digit.red-bar { border-color:rgba(255,45,85,0.5); background:rgba(255,45,85,0.06); }
+  .freq-digit.red-bar .d-num { color:var(--red); }
+  .freq-digit.red-bar .d-bar-fill { background:var(--red); }
+  .freq-digit.neutral .d-bar-fill { background:var(--dim); }
+
+  /* RIGHT PANEL */
+  .right-panel {
+    width:260px; min-width:240px;
+    background:var(--bg2); border-left:1px solid var(--border);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .tick-stream { flex:1; overflow-y:auto; padding:8px; }
+  .tick-stream::-webkit-scrollbar { width:3px; }
+  .tick-stream::-webkit-scrollbar-thumb { background:var(--border); }
+
+  .tick-item {
+    display:flex; justify-content:space-between; align-items:center; padding:4px 8px;
+    border-bottom:1px solid rgba(14,52,96,0.25); font-family:'Share Tech Mono'; font-size:10px;
+    transition:background 0.15s;
+  }
+  .tick-item.new { background:rgba(0,240,255,0.06); animation:fadeNew 1.2s forwards; }
+  @keyframes fadeNew { to { background:transparent; } }
+  .tick-price { color: var(--dim); font-size:10px; }
+  .tick-digit {
+    font-size:14px; font-weight:700; width:22px; height:22px; border-radius:3px;
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid transparent;
+  }
+  .tick-digit.low { color:var(--green); background:rgba(0,255,136,0.1); border-color:rgba(0,255,136,0.25); }
+  .tick-digit.high { color:var(--red); background:rgba(255,45,85,0.1); border-color:rgba(255,45,85,0.25); }
+  .tick-digit.mid { color:var(--blue); background:rgba(77,166,255,0.08); border-color:rgba(77,166,255,0.2); }
+
+  .balance-bar {
+    padding:8px 12px; background:var(--bg3); border-top:1px solid var(--border);
+    display:flex; gap:16px; flex-wrap:wrap;
+  }
+  .bal-item { font-family:'Share Tech Mono'; font-size:11px; }
+  .bal-item .lbl { font-size:9px; color:var(--dim); }
+  .bal-item .val { font-size:13px; font-weight:700; }
+
+  .notif-area { position:fixed; top:70px; right:12px; z-index:1000; display:flex; flex-direction:column; gap:6px; }
+  .notif {
+    padding:8px 14px; border-radius:4px; font-family:'Share Tech Mono'; font-size:11px;
+    animation: slideIn 0.3s ease, fadeOut 0.5s 3.5s forwards;
+    max-width:280px;
+  }
+  .notif.win { background:rgba(0,255,136,0.15); border:1px solid var(--green); color:var(--green); }
+  .notif.loss { background:rgba(255,45,85,0.15); border:1px solid var(--red); color:var(--red); }
+  .notif.info { background:rgba(0,112,255,0.15); border:1px solid var(--accent2); color:var(--accent); }
+  @keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+  @keyframes fadeOut { to{opacity:0;transform:translateX(100%)} }
+
+  .loading-overlay {
+    position:fixed; top:0; left:0; right:0; bottom:0;
+    background:var(--bg); display:flex; align-items:center; justify-content:center;
+    z-index:9998; flex-direction:column; gap:16px;
+  }
+  .loading-logo { font-family:'Orbitron'; font-size:36px; font-weight:900; color:var(--s4); text-shadow:0 0 30px var(--s4); letter-spacing:8px; }
+  .loading-bar { width:200px; height:2px; background:var(--border); border-radius:1px; overflow:hidden; }
+  .loading-fill { height:100%; background:var(--s4); animation:load 1.5s ease-in-out forwards; }
+  @keyframes load { from{width:0} to{width:100%} }
+  .loading-text { font-family:'Share Tech Mono'; font-size:11px; color:var(--dim); }
+  .empty-state { text-align:center; padding:40px; color:var(--dim); font-family:'Share Tech Mono'; font-size:11px; }
+  .empty-state .icon { font-size:32px; margin-bottom:8px; opacity:0.4; }
+
+  select {
+    background:var(--bg3); border:1px solid var(--border); color:var(--text);
+    font-family:'Share Tech Mono'; font-size:10px; padding:3px 6px; border-radius:3px; outline:none;
+  }
+  .market-ticker { font-family:'Share Tech Mono'; font-size:9px; color:var(--dim); margin-top:2px; }
+  .martingale-badge {
+    display:inline-block; padding:1px 6px; border-radius:2px; font-size:9px;
+    font-family:'Share Tech Mono'; background:rgba(255,107,0,0.2); color:var(--orange);
+    border:1px solid rgba(255,107,0,0.4);
+  }
+
+  /* S4 STRATEGY INFO BOX */
+  .s4-rule-box {
+    background:rgba(255,68,204,0.05); border:1px solid rgba(255,68,204,0.2);
+    border-radius:4px; padding:10px 14px; margin-bottom:12px;
+    font-family:'Share Tech Mono'; font-size:10px;
+  }
+  .s4-rule-box .rule-title { color:var(--s4); font-size:9px; letter-spacing:2px; margin-bottom:6px; font-family:'Orbitron'; }
+  .s4-rule-box .rule-row { display:flex; gap:8px; margin-bottom:4px; color:var(--text); }
+  .s4-rule-box .rule-label { color:var(--dim); min-width:80px; }
+
+  @media (max-width: 900px) {
+    .main { flex-direction: column; height: auto; overflow: visible; }
+    .scanner-panel { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid var(--border); max-height: 260px; }
+    .right-panel { width: 100%; min-width: unset; border-left: none; border-top: 1px solid var(--border); }
+    .center-panel { min-height: 500px; }
+    .stats-row { grid-template-columns: repeat(3,1fr); }
+    .setups-grid { grid-template-columns: 1fr 1fr; }
+    .market-bars { flex-wrap: wrap; gap: 1px; }
+    .digit-cell { width: 18px; height: 18px; font-size: 8px; }
+    .trade-row { grid-template-columns: 70px 60px 55px 40px 50px 50px 55px 1fr; font-size: 9px; }
+  }
+  @media (max-width: 600px) {
+    .logo { font-size: 16px; letter-spacing: 2px; }
+    .header { padding: 8px 12px; }
+    .token-bar { flex-wrap: wrap; gap: 6px; padding: 6px 10px; }
+    .token-bar input { max-width: 100%; width: 100%; }
+    .settings-bar { padding: 6px 10px; gap: 10px; }
+    .stats-row { grid-template-columns: repeat(3,1fr); gap: 5px; }
+    .setups-grid { grid-template-columns: 1fr; }
+    .strategy-content { padding: 8px; }
+    .strat-tab { font-size: 8px; padding: 8px 4px; }
+    .trade-row { grid-template-columns: 55px 50px 50px 30px 45px 40px 50px; font-size: 8px; }
+    .trade-row span:last-child { display: none; }
+    .freq-digit { min-width: 28px; }
+    .market-list { max-height: 200px; }
+    .scanner-panel { max-height: 220px; }
+    .digit-cell { width: 16px; height: 16px; font-size: 7px; }
+    .right-panel { max-height: 280px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-logo">HMT</div>
+  <div style="font-family:'Share Tech Mono';font-size:11px;color:var(--dim);letter-spacing:4px;">GHOST S4 · PRESSURE GATE</div>
+  <div class="loading-bar"><div class="loading-fill"></div></div>
+  <div class="loading-text" id="loadingText">INITIALIZING...</div>
+</div>
+
+<div class="notif-area" id="notifArea"></div>
+
+<div class="header">
+  <div class="logo">HMT <span>GHOST S4 — PRESSURE GATE</span></div>
+  <div class="header-right">
+    <div class="conn-status">
+      <div class="conn-dot" id="connDot"></div>
+      <span id="connText" style="color:var(--dim)">DISCONNECTED</span>
+    </div>
+    <div style="font-family:'Share Tech Mono';font-size:10px;color:var(--dim)" id="clockEl"></div>
+  </div>
+</div>
+
+<div class="token-bar">
+  <label>⬡ DERIV TOKEN</label>
+  <input type="password" id="tokenInput" placeholder="Paste your Deriv API token here..." />
+  <button class="btn btn-connect" onclick="connectToken()">CONNECT</button>
+  <div style="flex:1"></div>
+  <div class="bal-item">
+    <div class="lbl">BALANCE</div>
+    <div class="val" id="balanceVal" style="color:var(--accent)">—</div>
+  </div>
+  <div class="bal-item">
+    <div class="lbl">SESSION PNL</div>
+    <div class="val" id="sessionPnl">+$0.00</div>
+  </div>
+</div>
+
+<div class="settings-bar">
+  <div class="settings-group">
+    <label>BASE STAKE $</label>
+    <input type="number" id="baseStake" value="0.35" step="0.01" min="0.35" />
+  </div>
+  <div class="settings-group">
+    <label>MARTINGALE ×</label>
+    <input type="number" id="martMulti" value="2" step="0.1" min="1.1" />
+  </div>
+  <div class="settings-group">
+    <label>TP $</label>
+    <input type="number" id="tpVal" value="5" step="0.5" />
+  </div>
+  <div class="settings-group">
+    <label>SL $</label>
+    <input type="number" id="slVal" value="3" step="0.5" />
+  </div>
+  <div class="settings-group">
+    <label>MARKETS</label>
+    <div class="toggle-group">
+      <button class="toggle-btn active" id="togglePlain" onclick="toggleMarkets('plain')" title="5 Plain Volatility">5 PLAIN</button>
+      <button class="toggle-btn active" id="toggle1s" onclick="toggleMarkets('1s')" title="5 one-second variants">+5 (1S)</button>
+    </div>
+  </div>
+  <div class="settings-group">
+    <label>AUTO TRADE</label>
+    <div class="toggle-group">
+      <button class="toggle-btn active" id="autoTradeBtn" onclick="toggleAutoTrade()">ON</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- LEFT: MARKET SCANNER -->
+  <div class="scanner-panel">
+    <div class="panel-title">
+      <span>MARKETS</span>
+      <span id="setupCount" style="color:var(--s4);font-size:9px">0 SETUPS</span>
+    </div>
+    <div class="market-list" id="marketList"></div>
+  </div>
+
+  <!-- CENTER: STRATEGY TABS -->
+  <div class="center-panel">
+    <div class="strategy-tabs">
+      <div class="strat-tab active" onclick="switchTab('s4')" id="tab-s4">
+        <div>S4 — PRESSURE GATE</div>
+        <div class="tab-pnl" id="tab-pnl-s4" style="color:var(--s4)">$0.00</div>
+        <span class="tab-toggle" id="toggle-s4"></span>
+      </div>
+    </div>
+
+    <div class="strategy-content" id="strategyContent">
+
+      <!-- S4 VIEW -->
+      <div class="strat-view active" id="view-s4">
+        <div class="strat-header">
+          <div>
+            <div class="strat-name" style="color:var(--s4)">STRATEGY 4 — PRESSURE GATE</div>
+            <div style="font-size:10px;color:var(--dim);margin-top:2px;font-family:'Share Tech Mono'">
+              Upper zone (0-4): Green=most, Blue=2nd · Gate: 2nd tick → 7/8/9 → UNDER 6 · 1 tick
+            </div>
+          </div>
+          <div class="strat-controls">
+            <button class="btn btn-sm btn-green" id="s4-onoff" onclick="toggleStrategy('s4')">ACTIVE</button>
+            <button class="btn btn-sm btn-gray" onclick="resetStrategy('s4')">RESET</button>
+          </div>
+        </div>
+
+        <!-- S4 RULE REFERENCE -->
+        <div class="s4-rule-box">
+          <div class="rule-title">▸ UNDER 6 SETUP</div>
+          <div class="rule-row"><span class="rule-label">Condition:</span><span>Green (most) AND Blue (2nd most) both in 0–4 zone</span></div>
+          <div class="rule-row"><span class="rule-label">Gate arm:</span><span>Tick lands on Blue digit (2nd most)</span></div>
+          <div class="rule-row"><span class="rule-label">Fire:</span><span>Next tick is 7, 8, or 9 → place UNDER 6, 1 tick</span></div>
+          <div class="rule-row"><span class="rule-label">Break:</span><span>Any non-7/8/9 tick after Blue → gate resets</span></div>
+          <div class="rule-title" style="margin-top:8px">▸ OVER 3 SETUP (mirror)</div>
+          <div class="rule-row"><span class="rule-label">Condition:</span><span>Green (most) AND Blue (2nd most) both in 5–9 zone</span></div>
+          <div class="rule-row"><span class="rule-label">Gate arm:</span><span>Tick lands on Blue digit (2nd most)</span></div>
+          <div class="rule-row"><span class="rule-label">Fire:</span><span>Next tick is 0, 1, or 2 → place OVER 3, 1 tick</span></div>
+          <div class="rule-row"><span class="rule-label">Break:</span><span>Any non-0/1/2 tick after Blue → gate resets</span></div>
+        </div>
+
+        <div class="stats-row" id="stats-s4">
+          <div class="stat-box"><div class="val green" id="s4-wins">0</div><div class="lbl">WINS</div></div>
+          <div class="stat-box"><div class="val red" id="s4-losses">0</div><div class="lbl">LOSSES</div></div>
+          <div class="stat-box"><div class="val yellow" id="s4-wr">0%</div><div class="lbl">WIN RATE</div></div>
+          <div class="stat-box"><div class="val pink" id="s4-pnl">$0.00</div><div class="lbl">PNL</div></div>
+          <div class="stat-box"><div class="val blue" id="s4-trades">0</div><div class="lbl">TRADES</div></div>
+        </div>
+
+        <div class="section-title">ACTIVE SETUPS</div>
+        <div class="setups-grid" id="setups-s4">
+          <div class="empty-state"><div class="icon">◎</div>Scanning markets...</div>
+        </div>
+
+        <div class="section-title" style="margin-top:12px">TRADE LOG</div>
+        <div class="trade-log">
+          <div class="trade-row header"><span>TIME</span><span>MARKET</span><span>CONTRACT</span><span>TICKS</span><span>STAKE</span><span>RESULT</span><span>P&L</span><span>NOTE</span></div>
+          <div id="log-s4"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT: MARKET DETAIL + TICK STREAM -->
+  <div class="right-panel">
+    <div class="panel-title">
+      <span id="selectedMarketName">SELECT MARKET</span>
+      <span id="selectedMarketLast" style="color:var(--accent);font-family:'Share Tech Mono';font-size:11px"></span>
+    </div>
+
+    <div style="padding:8px;">
+      <div class="freq-display" id="freqDisplay">
+        <div class="empty-state" style="width:100%;padding:20px">Click a market</div>
+      </div>
+    </div>
+
+    <div class="panel-title" style="font-size:9px">
+      LIVE TICK STREAM
+      <span style="display:flex;gap:6px;font-size:8px;font-family:'Share Tech Mono'">
+        <span style="color:var(--green)">▪ 0-2</span>
+        <span style="color:var(--blue)">▪ 3-6</span>
+        <span style="color:var(--red)">▪ 7-9</span>
+      </span>
+    </div>
+    <div class="tick-stream" id="tickStream">
+      <div class="empty-state" style="padding:20px">No market selected</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// HMT GHOST — STRATEGY 4 ONLY — PRESSURE GATE
+// UNDER 6: green+blue both in 0-4 → wait blue tick → 7/8/9 fires UNDER 6 1T
+// OVER 3:  green+blue both in 5-9 → wait blue tick → 0/1/2 fires OVER 3 1T
+// Gate resets if anything other than the trigger digit follows blue tick
+// ============================================================
+
+const MARKETS_PLAIN = [
+  { name:'V10 (1.00%)',  symbol:'R_10'   },
+  { name:'V25 (2.50%)',  symbol:'R_25'   },
+  { name:'V50 (5.00%)',  symbol:'R_50'   },
+  { name:'V75 (7.50%)',  symbol:'R_75'   },
+  { name:'V100 (10%)',   symbol:'R_100'  },
+];
+const MARKETS_1S = [
+  { name:'V10 1s',    symbol:'1HZ10V'   },
+  { name:'V25 1s',    symbol:'1HZ25V'   },
+  { name:'V50 1s',    symbol:'1HZ50V'   },
+  { name:'V75 1s',    symbol:'1HZ75V'   },
+  { name:'V100 1s',   symbol:'1HZ100V'  },
+];
+
+const marketState = {};
+let tickWS = null;
+let tickWSReady = false;
+let tickPingInterval = null;
+let tickWSDestroyed = false;
+let selectedMarket = null;
+let userManualSelect = false;
+let useAutoTrade = true;
+let use1s = true;
+let usePlain = true;
+let tokenWS = null;
+let apiToken = null;
+let accountBalance = null;
+let sessionPnl = 0;
+
+const stratState = {
+  s4: { active:true, wins:0, losses:0, pnl:0, martStake:null, bestTrade:null, worstTrade:null },
+};
+
+const detectedDecimals = {};
+
+function getDecimals(symbol) {
+  return detectedDecimals[symbol] || 4;
+}
+
+function detectAndLockDecimals(symbol, quote) {
+  const s = String(quote);
+  const dot = s.indexOf('.');
+  const seen = dot === -1 ? 0 : s.length - dot - 1;
+  if (!detectedDecimals[symbol] || seen > detectedDecimals[symbol]) {
+    detectedDecimals[symbol] = seen;
+  }
+}
+
+function extractDigit(quote, decimals) {
+  const s = String(quote);
+  const dotIdx = s.indexOf('.');
+  if (dotIdx === -1) return 0;
+  const frac = s.substring(dotIdx + 1).padEnd(decimals, '0');
+  return parseInt(frac[decimals - 1], 10);
+}
+
+function initMarket(symbol, name) {
+  if(marketState[symbol]) return;
+  marketState[symbol] = {
+    symbol, name,
+    ticks: [], digits: [],
+    freq: new Array(10).fill(0),
+    // S4 gate state per market
+    s4: {
+      gateArmed: false,   // true after blue digit ticked
+      contract: null,     // 'UNDER6' or 'OVER3'
+      blueDigit: null,    // the actual blue digit value
+    },
+    setupSignals: [],
+    lastDigit: null, lastQuote: null, lastQuoteStr: null,
+    rank: null,
+  };
+}
+
+// ============================================================
+// SINGLE PERSISTENT WEBSOCKET ENGINE
+// ============================================================
+function connectMarkets() {
+  const markets = getActiveMarkets();
+  markets.forEach(m => initMarket(m.symbol, m.name));
+  openTickWS(markets);
+}
+
+function openTickWS(markets) {
+  tickWSDestroyed = false;
+  if(tickPingInterval) { clearInterval(tickPingInterval); tickPingInterval = null; }
+  if(tickWS) {
+    tickWSDestroyed = true;
+    try { tickWS.close(); } catch(e) {}
+    tickWS = null;
+    tickWSDestroyed = false;
+  }
+
+  tickWS = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=1089');
+  tickWSReady = false;
+  const thisWS = tickWS;
+
+  thisWS.onopen = () => {
+    if(thisWS !== tickWS) return;
+    tickWSReady = true;
+    updateConnStatus('live');
+
+    markets.forEach((m, i) => {
+      setTimeout(() => {
+        if(thisWS !== tickWS || thisWS.readyState !== 1) return;
+        thisWS.send(JSON.stringify({
+          ticks_history: m.symbol,
+          count: 500,
+          end: 'latest',
+          style: 'ticks',
+          subscribe: 1,
+          req_id: i + 1,
+        }));
+      }, i * 250);
+    });
+
+    tickPingInterval = setInterval(() => {
+      if(thisWS !== tickWS) { clearInterval(tickPingInterval); return; }
+      if(thisWS.readyState === 1) thisWS.send(JSON.stringify({ ping: 1 }));
+    }, 10000);
+  };
+
+  thisWS.onmessage = (e) => {
+    if(thisWS !== tickWS) return;
+    let data;
+    try { data = JSON.parse(e.data); } catch(ex) { return; }
+    if(data.msg_type === 'ping' || data.msg_type === 'pong') return;
+
+    if(data.msg_type === 'history') {
+      const sym = data.echo_req && data.echo_req.ticks_history;
+      if(!sym || !marketState[sym]) return;
+      const ms = marketState[sym];
+      if(ms.ticks.length === 0) {
+        const prices = data.history.prices || [];
+        let lastP = null;
+        prices.forEach(p => {
+          const ps = String(p);
+          if(ps === lastP) return;
+          lastP = ps;
+          detectAndLockDecimals(sym, p);
+          ms.ticks.push(p);
+          ms.digits.push(extractDigit(p, getDecimals(sym)));
+        });
+        if(ms.ticks.length > 1000) { ms.ticks = ms.ticks.slice(-1000); ms.digits = ms.digits.slice(-1000); }
+      }
+      ms.freq = computeFreq(ms.digits);
+      ms.rank = rankDigits(ms.freq);
+      updateMarketRow(sym);
+      if(selectedMarket === sym) { updateFreqDisplay(sym); updateTickStream(sym); }
+
+    } else if(data.msg_type === 'tick') {
+      const sym = data.tick && data.tick.symbol;
+      if(sym && marketState[sym]) onTick(sym, data.tick.quote);
+    }
+  };
+
+  thisWS.onerror = () => {};
+
+  thisWS.onclose = () => {
+    if(thisWS !== tickWS) return;
+    if(tickWSDestroyed) return;
+    if(tickPingInterval) { clearInterval(tickPingInterval); tickPingInterval = null; }
+    tickWSReady = false;
+    updateConnStatus('reconnecting');
+    setTimeout(() => {
+      if(!tickWSDestroyed) openTickWS(getActiveMarkets());
+    }, 3000);
+  };
+}
+
+function updateConnStatus(state) {
+  const dot = document.getElementById('connDot');
+  const txt = document.getElementById('connText');
+  if(!dot || !txt) return;
+  if(state === 'live') {
+    dot.classList.add('live');
+    txt.textContent = 'LIVE'; txt.style.color = 'var(--green)';
+  } else if(state === 'reconnecting') {
+    dot.classList.remove('live');
+    txt.textContent = 'RECONNECTING...'; txt.style.color = 'var(--yellow)';
+  } else {
+    dot.classList.remove('live');
+    txt.textContent = 'DISCONNECTED'; txt.style.color = 'var(--dim)';
+  }
+}
+
+function getActiveMarkets() {
+  let markets = [];
+  if(usePlain) markets = markets.concat(MARKETS_PLAIN);
+  if(use1s) markets = markets.concat(MARKETS_1S);
+  return markets;
+}
+
+// ============================================================
+// TOKEN WEBSOCKET
+// ============================================================
+let tokenPingInterval = null;
+
+function connectToken(isReconnect) {
+  const token = document.getElementById('tokenInput').value.trim();
+  if(!token && !apiToken) { notify('Enter a Deriv API token', 'info'); return; }
+  if(token) apiToken = token;
+
+  if(tokenWS && tokenWS.readyState <= 1) tokenWS.close();
+  if(tokenPingInterval) clearInterval(tokenPingInterval);
+
+  tokenWS = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=1089');
+
+  tokenWS.onopen = () => {
+    tokenWS.send(JSON.stringify({ authorize: apiToken }));
+    tokenPingInterval = setInterval(() => {
+      if(tokenWS && tokenWS.readyState === 1) tokenWS.send(JSON.stringify({ ping: 1 }));
+    }, 25000);
+  };
+
+  tokenWS.onmessage = (e) => {
+    let data;
+    try { data = JSON.parse(e.data); } catch(ex) { return; }
+    if(data.msg_type === 'ping') return;
+    if(data.msg_type === 'authorize') {
+      if(data.error) { notify('Auth failed: ' + data.error.message, 'loss'); return; }
+      accountBalance = parseFloat(data.authorize.balance);
+      document.getElementById('balanceVal').textContent = '$' + accountBalance.toFixed(2);
+      if(!isReconnect) notify('Token authorised — Balance: $' + accountBalance.toFixed(2), 'win');
+      tokenWS.send(JSON.stringify({ balance: 1, subscribe: 1 }));
+    } else if(data.msg_type === 'balance') {
+      accountBalance = parseFloat(data.balance.balance);
+      document.getElementById('balanceVal').textContent = '$' + accountBalance.toFixed(2);
+    } else if(data.msg_type === 'buy') {
+      onBuyResponse(data);
+    } else if(data.msg_type === 'proposal_open_contract') {
+      onContractUpdate(data);
+    }
+  };
+
+  tokenWS.onerror = () => {};
+  tokenWS.onclose = () => {
+    if(tokenPingInterval) clearInterval(tokenPingInterval);
+    if(apiToken) setTimeout(() => connectToken(true), 3000);
+  };
+}
+
+// ============================================================
+// FREQUENCY ENGINE
+// ============================================================
+function computeFreq(digits) {
+  const freq = new Array(10).fill(0);
+  digits.forEach(d => freq[d]++);
+  const total = digits.length || 1;
+  return freq.map(c => (c/total)*100);
+}
+
+function rankDigits(pcts) {
+  const sorted = pcts.map((p,i)=>({p,i})).sort((a,b)=>b.p-a.p);
+  return {
+    green: sorted[0].i,
+    blue:  sorted[1].i,
+    red:   sorted[9].i,
+    third: sorted[2].i,
+    pcts,
+    sorted,
+    greenUnique: Math.abs(sorted[0].p - sorted[1].p) > 0.3,
+    blueUnique:  Math.abs(sorted[1].p - sorted[2].p) > 0.3,
+  };
+}
+
+// ============================================================
+// STRATEGY 4 — PRESSURE GATE CHECKER
+// Returns setup info if conditions are met, null otherwise
+// UNDER 6: green(most) in 0-4 AND blue(2nd most) in 0-4
+// OVER 3:  green(most) in 5-9 AND blue(2nd most) in 5-9
+// ============================================================
+function checkStrategy4(rank) {
+  const { green, blue, greenUnique } = rank;
+  if(!greenUnique) return null;
+
+  const greenUpper = green <= 4;  // 0-4 zone
+  const blueUpper  = blue  <= 4;
+
+  // UNDER 6 setup: both most & 2nd most in upper zone (0-4)
+  if(greenUpper && blueUpper) {
+    return { contract: 'UNDER6', ticks: 1, blueDigit: blue };
+  }
+
+  // OVER 3 setup: both most & 2nd most in lower zone (5-9)
+  if(!greenUpper && !blueUpper) {
+    return { contract: 'OVER3', ticks: 1, blueDigit: blue };
+  }
+
+  return null;
+}
+
+// ============================================================
+// TICK PROCESSING CORE
+// ============================================================
+function onTick(symbol, quote) {
+  const ms = marketState[symbol];
+  if(!ms) return;
+
+  const quoteStr = String(quote);
+  if(ms.lastQuoteStr === quoteStr) return;
+
+  detectAndLockDecimals(symbol, quote);
+  const digit = extractDigit(quote, getDecimals(symbol));
+  ms.lastQuoteStr = quoteStr;
+  ms.lastQuote = quote;
+  ms.lastDigit = digit;
+
+  ms.ticks.push(quote);
+  ms.digits.push(digit);
+  if(ms.ticks.length > 1000) { ms.ticks.shift(); ms.digits.shift(); }
+
+  const pcts = computeFreq(ms.digits);
+  ms.freq = pcts;
+  const rank = rankDigits(pcts);
+  ms.rank = rank;
+
+  const setup4 = checkStrategy4(rank);
+  ms.setupSignals = [];
+  if(setup4 && stratState.s4.active) ms.setupSignals.push('S4');
+
+  // ---- S4 GATE LOGIC ----
+  if(setup4 && stratState.s4.active) {
+    const ts = ms.s4;
+
+    if(!ts.gateArmed) {
+      // Conditions met — watch for blue digit tick to ARM the gate
+      if(digit === setup4.blueDigit) {
+        // Gate ARMED — next valid tick fires, anything else resets
+        ts.gateArmed = true;
+        ts.contract  = setup4.contract;
+        ts.blueDigit = setup4.blueDigit;
+        notify(`⚡ GATE ARMED — ${ms.name} · ${setup4.contract} · Wait 7/8/9 or 0/1/2`, 'info');
+      }
+    } else {
+      // Gate is ARMED — evaluate the next tick
+      const fireDigits   = ts.contract === 'UNDER6' ? [7,8,9] : [0,1,2];
+
+      if(fireDigits.includes(digit)) {
+        // FIRE TRADE
+        if(useAutoTrade) placeTrade(symbol, 's4', ts.contract, 1);
+        ts.gateArmed = false;
+        ts.contract  = null;
+      } else {
+        // Any other digit — gate broken, reset
+        ts.gateArmed = false;
+        ts.contract  = null;
+        notify(`⚠ GATE BROKEN — ${ms.name} · digit ${digit} not in fire zone`, 'info');
+      }
+    }
+  } else {
+    // Conditions no longer met — disarm gate entirely
+    if(ms.s4.gateArmed) {
+      ms.s4.gateArmed = false;
+      ms.s4.contract  = null;
+    }
+  }
+
+  if(ms.setupSignals.length > 0 && !userManualSelect) {
+    if(selectedMarket !== symbol) selectMarket(symbol);
+  }
+
+  updateMarketRow(symbol);
+  if(selectedMarket === symbol) updateRightPanel(symbol, digit, quote);
+  updateSetupCards();
+  updateStats();
+}
+
+// ============================================================
+// TRADE EXECUTION
+// ============================================================
+const pendingTrades = {};
+
+function getStake(stratKey) {
+  const base = parseFloat(document.getElementById('baseStake').value) || 0.35;
+  const multi = parseFloat(document.getElementById('martMulti').value) || 2.1;
+  const ss = stratState[stratKey];
+  if(ss.martStake !== null) {
+    const s = ss.martStake;
+    ss.martStake = null;
+    return s;
+  }
+  return base;
+}
+
+function placeTrade(symbol, stratKey, contractType, ticks) {
+  if(!apiToken || !tokenWS || tokenWS.readyState !== 1) return;
+  const stake = getStake(stratKey);
+
+  // S4 uses DIGITUNDER barrier=6 (under 6) or DIGITOVER barrier=3 (over 3)
+  let contractTypeStr, barrier;
+  if(contractType === 'UNDER6') {
+    contractTypeStr = 'DIGITUNDER';
+    barrier = 6;
+  } else {
+    contractTypeStr = 'DIGITOVER';
+    barrier = 3;
+  }
+
+  const req = {
+    buy: 1,
+    price: stake,
+    parameters: {
+      amount: stake,
+      basis: 'stake',
+      contract_type: contractTypeStr,
+      currency: 'USD',
+      duration: ticks,
+      duration_unit: 't',
+      symbol: symbol,
+      barrier: barrier,
+    }
+  };
+
+  const reqId = Date.now();
+  req.req_id = reqId;
+
+  pendingTrades[reqId] = {
+    stratKey, symbol, contractType, ticks, stake,
+    time: new Date().toLocaleTimeString(),
+  };
+
+  tokenWS.send(JSON.stringify(req));
+
+  addTradeLog(stratKey, {
+    time: new Date().toLocaleTimeString(),
+    symbol, contractType, ticks, stake,
+    result:'PENDING', pnl:0, note:'', reqId
+  });
+}
+
+function onBuyResponse(data) {
+  const reqId = data.req_id;
+  const pending = pendingTrades[reqId];
+  if(!pending) return;
+  if(data.error) {
+    notify('Trade error: ' + data.error.message, 'loss');
+    delete pendingTrades[reqId];
+    return;
+  }
+  const contractId = data.buy.contract_id;
+  pending.contractId = contractId;
+  tokenWS.send(JSON.stringify({ proposal_open_contract:1, contract_id: contractId, subscribe:1 }));
+}
+
+function onContractUpdate(data) {
+  const poc = data.proposal_open_contract;
+  if(!poc) return;
+  const contractId = poc.contract_id;
+  const entry = Object.values(pendingTrades).find(p => p.contractId === contractId);
+  if(!entry) return;
+
+  if(poc.is_sold || poc.status === 'won' || poc.status === 'lost') {
+    const pnl = parseFloat(poc.profit) || 0;
+    const won = poc.status === 'won';
+    const ss = stratState[entry.stratKey];
+
+    if(won) {
+      ss.wins++;
+      ss.pnl += pnl;
+      sessionPnl += pnl;
+      ss.martStake = null;
+      if(ss.bestTrade === null || pnl > ss.bestTrade) ss.bestTrade = pnl;
+      notify(`✓ S4 WIN +$${pnl.toFixed(2)} — ${entry.symbol}`, 'win');
+    } else {
+      ss.losses++;
+      ss.pnl += pnl;
+      sessionPnl += pnl;
+      if(ss.worstTrade === null || pnl < ss.worstTrade) ss.worstTrade = pnl;
+      const multi = parseFloat(document.getElementById('martMulti').value) || 2.1;
+      ss.martStake = Math.abs(pnl) * multi;
+      notify(`✗ S4 LOSS $${pnl.toFixed(2)} — ${entry.symbol} → MART ×${multi}`, 'loss');
+    }
+
+    const tp = parseFloat(document.getElementById('tpVal').value) || 5;
+    const sl = parseFloat(document.getElementById('slVal').value) || 3;
+    if(ss.pnl >= tp) {
+      ss.active = false;
+      notify('S4 TP HIT — Strategy paused', 'info');
+      updateStratToggle('s4');
+    }
+    if(ss.pnl <= -Math.abs(sl)) {
+      ss.active = false;
+      notify('S4 SL HIT — Strategy paused', 'loss');
+      updateStratToggle('s4');
+    }
+
+    updateTradeLogEntry(entry.stratKey, entry.reqId, won ? 'WIN' : 'LOSS', pnl, won ? '' : 'MART NEXT');
+    delete pendingTrades[entry.reqId];
+    updateStats();
+    updateSessionPnl();
+  }
+}
+
+// ============================================================
+// UI UPDATES
+// ============================================================
+function renderMarketList() {
+  const list = document.getElementById('marketList');
+  list.innerHTML = '';
+  getActiveMarkets().forEach(m => {
+    const row = document.createElement('div');
+    row.className = 'market-row';
+    row.id = 'mrow-' + m.symbol;
+    row.onclick = () => selectMarket(m.symbol, true);
+    row.innerHTML = `
+      <div class="market-name">${m.name}</div>
+      <div class="market-ticker">${m.symbol}</div>
+      <div class="market-bars" id="mbars-${m.symbol}">
+        ${[0,1,2,3,4,5,6,7,8,9].map(d=>`<div class="digit-cell neutral" id="dc-${m.symbol}-${d}">${d}</div>`).join('')}
+      </div>
+      <div class="market-signals" id="msigs-${m.symbol}"></div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function updateMarketRow(symbol) {
+  const ms = marketState[symbol];
+  if(!ms || !ms.rank) return;
+  const rank = ms.rank;
+
+  for(let d=0; d<10; d++) {
+    const cell = document.getElementById(`dc-${symbol}-${d}`);
+    if(!cell) continue;
+    cell.className = 'digit-cell';
+    if(d === rank.green) cell.classList.add('green-bar');
+    else if(d === rank.blue) cell.classList.add('blue-bar');
+    else if(d === rank.red) cell.classList.add('red-bar');
+    else cell.classList.add('neutral');
+    cell.title = rank.pcts[d].toFixed(1) + '%';
+  }
+
+  const sigsEl = document.getElementById(`msigs-${symbol}`);
+  if(sigsEl) {
+    sigsEl.innerHTML = ms.setupSignals.map(s =>
+      `<span class="sig-badge sig-s4">${s}</span>`
+    ).join('');
+  }
+
+  const row = document.getElementById(`mrow-${symbol}`);
+  if(row) {
+    row.classList.toggle('has-setup', ms.setupSignals.length > 0);
+    row.classList.toggle('selected', selectedMarket === symbol);
+  }
+
+  let total = 0;
+  Object.values(marketState).forEach(m => { total += (m.setupSignals||[]).length; });
+  document.getElementById('setupCount').textContent = total + ' SETUPS';
+}
+
+let manualSelectTimer = null;
+function selectMarket(symbol, isManual) {
+  selectedMarket = symbol;
+  if(isManual) {
+    userManualSelect = true;
+    if(manualSelectTimer) clearTimeout(manualSelectTimer);
+    manualSelectTimer = setTimeout(() => { userManualSelect = false; }, 30000);
+  }
+  document.querySelectorAll('.market-row').forEach(r => r.classList.remove('selected'));
+  const row = document.getElementById('mrow-' + symbol);
+  if(row) row.classList.add('selected');
+  const ms = marketState[symbol];
+  if(!ms) return;
+  document.getElementById('selectedMarketName').textContent = ms.name;
+  updateFreqDisplay(symbol);
+  updateTickStream(symbol);
+}
+
+function updateRightPanel(symbol, digit, quote) {
+  if(selectedMarket !== symbol) return;
+  document.getElementById('selectedMarketLast').textContent = quote;
+  updateFreqDisplay(symbol);
+  addTickToStream(digit, quote);
+}
+
+function updateFreqDisplay(symbol) {
+  const ms = marketState[symbol];
+  if(!ms || !ms.rank) return;
+  const rank = ms.rank;
+  const el = document.getElementById('freqDisplay');
+  el.innerHTML = '';
+  for(let d=0; d<10; d++) {
+    const pct = rank.pcts[d];
+    const barH = Math.round((pct/15)*30);
+    let cls = 'neutral';
+    if(d === rank.green) cls = 'green-bar';
+    else if(d === rank.blue) cls = 'blue-bar';
+    else if(d === rank.red) cls = 'red-bar';
+
+    el.innerHTML += `
+      <div class="freq-digit ${cls}">
+        <div class="d-num">${d}</div>
+        <div class="d-bar"><div class="d-bar-fill" style="height:${barH}px"></div></div>
+        <div class="d-pct">${pct.toFixed(1)}%</div>
+      </div>`;
+  }
+}
+
+function updateTickStream(symbol) {
+  const el = document.getElementById('tickStream');
+  el.innerHTML = '';
+  const ms = marketState[symbol];
+  if(!ms || ms.ticks.length === 0) return;
+  const uniqueTicks = [];
+  let lastQ = null;
+  for(let i = ms.ticks.length - 1; i >= 0; i--) {
+    const q = ms.ticks[i];
+    if(q !== lastQ) { uniqueTicks.push({ q, d: ms.digits[i] }); lastQ = q; }
+    if(uniqueTicks.length >= 60) break;
+  }
+  uniqueTicks.forEach(({ q, d }) => {
+    const cls = d <= 2 ? 'low' : d >= 7 ? 'high' : 'mid';
+    el.innerHTML += `<div class="tick-item"><span class="tick-price">${q||''}</span><span class="tick-digit ${cls}">${d}</span></div>`;
+  });
+}
+
+function addTickToStream(digit, quote) {
+  const el = document.getElementById('tickStream');
+  if(el.firstChild) {
+    const firstSpan = el.firstChild.querySelector('.tick-price');
+    if(firstSpan && firstSpan.textContent == quote) return;
+  }
+  const cls = digit <= 2 ? 'low' : digit >= 7 ? 'high' : 'mid';
+  const item = document.createElement('div');
+  item.className = 'tick-item new';
+  item.innerHTML = `<span class="tick-price">${quote}</span><span class="tick-digit ${cls}">${digit}</span>`;
+  el.insertBefore(item, el.firstChild);
+  while(el.children.length > 80) el.removeChild(el.lastChild);
+}
+
+// ============================================================
+// SETUP CARDS
+// ============================================================
+function updateSetupCards() {
+  const el = document.getElementById('setups-s4');
+  if(!el) return;
+  const markets = getActiveMarkets();
+  let html = '';
+
+  markets.forEach(m => {
+    const ms = marketState[m.symbol];
+    if(!ms || !ms.setupSignals || !ms.setupSignals.includes('S4')) return;
+    const rank = ms.rank;
+    if(!rank) return;
+    const setup = checkStrategy4(rank);
+    if(!setup) return;
+
+    const ts = ms.s4;
+    const armed = ts.gateArmed;
+    const fireStr = setup.contract === 'UNDER6' ? '7, 8 or 9' : '0, 1 or 2';
+    const contractLabel = setup.contract === 'UNDER6' ? '▼ UNDER 6' : '▲ OVER 3';
+    const contractCls = setup.contract === 'UNDER6' ? 'under' : 'over';
+    const zoneStr = setup.contract === 'UNDER6' ? 'Upper zone (0-4)' : 'Lower zone (5-9)';
+
+    html += `<div class="setup-card s4">
+      <div class="setup-market">${ms.name}</div>
+      <div class="setup-contract ${contractCls}">${contractLabel} · 1T</div>
+      <div class="setup-info">${ms.symbol} · G:${rank.green}🟢 B:${rank.blue}🔵 — ${zoneStr}</div>
+      <div class="gate-status ${armed ? 'armed' : ''}">${armed ? `⚡ GATE ARMED — Fire on ${fireStr}` : `◎ WATCHING FOR BLUE (${rank.blue})`}</div>
+    </div>`;
+  });
+
+  el.innerHTML = html || '<div class="empty-state"><div class="icon">◎</div>No S4 setups matched</div>';
+}
+
+// ============================================================
+// TRADE LOG
+// ============================================================
+const tradeLogs = { s4:[] };
+
+function addTradeLog(stratKey, trade) {
+  tradeLogs[stratKey].unshift(trade);
+  renderTradeLog(stratKey);
+}
+
+function updateTradeLogEntry(stratKey, reqId, result, pnl, note) {
+  const entry = tradeLogs[stratKey].find(t => t.reqId === reqId);
+  if(entry) {
+    entry.result = result;
+    entry.pnl = pnl;
+    entry.note = note;
+    renderTradeLog(stratKey);
+  }
+}
+
+function renderTradeLog(stratKey) {
+  const el = document.getElementById(`log-${stratKey}`);
+  if(!el) return;
+  const logs = tradeLogs[stratKey].slice(0, 50);
+  el.innerHTML = logs.map(t => {
+    const rClass = t.result === 'WIN' ? 'win' : t.result === 'LOSS' ? 'loss' : 'pending';
+    // PNL display
+    let pnlStr = '—';
+    let pnlColor = 'var(--yellow)';
+    if(t.result === 'WIN') {
+      pnlStr = `+$${t.pnl.toFixed(2)}`;
+      pnlColor = 'var(--green)';
+    } else if(t.result === 'LOSS') {
+      pnlStr = `-$${Math.abs(t.pnl).toFixed(2)}`;
+      pnlColor = 'var(--red)';
+    }
+    return `<div class="trade-row ${rClass}">
+      <span>${t.time}</span>
+      <span>${t.symbol}</span>
+      <span>${t.contractType}</span>
+      <span>${t.ticks}T</span>
+      <span>$${t.stake.toFixed(2)}</span>
+      <span><span class="badge ${rClass}">${t.result}</span></span>
+      <span style="color:${pnlColor};font-weight:700">${pnlStr}</span>
+      <span style="color:var(--orange)">${t.note || ''}</span>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// STATS
+// ============================================================
+function updateStats() {
+  const ss = stratState.s4;
+  const total = ss.wins + ss.losses;
+  const wr = total > 0 ? ((ss.wins/total)*100).toFixed(1) : '0.0';
+  const pnl = ss.pnl;
+
+  document.getElementById('s4-wins').textContent = ss.wins;
+  document.getElementById('s4-losses').textContent = ss.losses;
+  document.getElementById('s4-wr').textContent = wr + '%';
+  document.getElementById('s4-trades').textContent = total;
+  const pnlEl = document.getElementById('s4-pnl');
+  pnlEl.textContent = (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2);
+  pnlEl.style.color = pnl >= 0 ? 'var(--s4)' : 'var(--red)';
+
+  const tabPnl = document.getElementById('tab-pnl-s4');
+  tabPnl.textContent = (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2);
+  tabPnl.style.color = pnl >= 0 ? 'var(--s4)' : 'var(--red)';
+}
+
+function updateSessionPnl() {
+  const el = document.getElementById('sessionPnl');
+  el.textContent = (sessionPnl>=0?'+':'')+'$'+sessionPnl.toFixed(2);
+  el.style.color = sessionPnl >= 0 ? 'var(--green)' : 'var(--red)';
+}
+
+// ============================================================
+// CONTROLS
+// ============================================================
+function switchTab(tab) {
+  document.querySelectorAll('.strat-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.strat-view').forEach(v => v.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  document.getElementById(`view-${tab}`).classList.add('active');
+}
+
+function toggleStrategy(sk) {
+  const ss = stratState[sk];
+  ss.active = !ss.active;
+  updateStratToggle(sk);
+}
+
+function updateStratToggle(sk) {
+  const ss = stratState[sk];
+  const btn = document.getElementById(`${sk}-onoff`);
+  const dot = document.getElementById(`toggle-${sk}`);
+  btn.textContent = ss.active ? 'ACTIVE' : 'PAUSED';
+  btn.className = 'btn btn-sm ' + (ss.active ? 'btn-green' : 'btn-red');
+  if(dot) dot.className = 'tab-toggle' + (ss.active ? '' : ' off');
+}
+
+function resetStrategy(sk) {
+  const ss = stratState[sk];
+  ss.wins = 0; ss.losses = 0; ss.pnl = 0; ss.martStake = null;
+  ss.bestTrade = null; ss.worstTrade = null;
+  // Reset all market gates
+  Object.values(marketState).forEach(ms => {
+    ms.s4.gateArmed = false;
+    ms.s4.contract = null;
+  });
+  tradeLogs[sk] = [];
+  renderTradeLog(sk);
+  updateStats();
+  notify('S4 stats + gates reset', 'info');
+}
+
+function toggleMarkets(type) {
+  if(type === 'plain') {
+    usePlain = !usePlain;
+    document.getElementById('togglePlain').classList.toggle('active', usePlain);
+  } else {
+    use1s = !use1s;
+    document.getElementById('toggle1s').classList.toggle('active', use1s);
+  }
+  renderMarketList();
+  connectMarkets();
+}
+
+function toggleAutoTrade() {
+  useAutoTrade = !useAutoTrade;
+  const btn = document.getElementById('autoTradeBtn');
+  btn.textContent = useAutoTrade ? 'ON' : 'OFF';
+  btn.classList.toggle('active', useAutoTrade);
+  notify('Auto trade: ' + (useAutoTrade ? 'ON' : 'OFF'), 'info');
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+function notify(msg, type='info') {
+  const area = document.getElementById('notifArea');
+  const el = document.createElement('div');
+  el.className = `notif ${type}`;
+  el.textContent = msg;
+  area.appendChild(el);
+  setTimeout(() => el.remove(), 4500);
+}
+
+// ============================================================
+// CLOCK
+// ============================================================
+function updateClock() {
+  document.getElementById('clockEl').textContent = new Date().toUTCString().slice(17,25) + ' UTC';
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ============================================================
+// BOOT
+// ============================================================
+window.addEventListener('load', () => {
+  const steps = ['LOADING MARKETS...', 'STARTING ENGINE...', 'CALIBRATING GATE...', 'READY'];
+  let i = 0;
+  const interval = setInterval(() => {
+    document.getElementById('loadingText').textContent = steps[i++] || '';
+    if(i >= steps.length) {
+      clearInterval(interval);
+      setTimeout(() => {
+        document.getElementById('loadingOverlay').style.display = 'none';
+        renderMarketList();
+        connectMarkets();
+        notify('HMT GHOST S4 online — Pressure Gate scanning ' + getActiveMarkets().length + ' markets', 'info');
+      }, 300);
+    }
+  }, 400);
+});
+</script>
+</body>
+</html>
